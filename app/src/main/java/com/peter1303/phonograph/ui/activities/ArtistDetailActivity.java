@@ -11,8 +11,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
@@ -34,6 +34,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.afollestad.materialdialogs.util.DialogUtils;
 import com.bumptech.glide.Glide;
 import com.github.ksoichiro.android.observablescrollview.ObservableListView;
+import com.google.android.material.snackbar.Snackbar;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
 import com.kabouzeid.appthemehelper.util.MaterialValueHelper;
 import com.peter1303.phonograph.R;
@@ -70,6 +71,9 @@ public class ArtistDetailActivity extends AbsSlidingMusicPanelActivity implement
     private static final int REQUEST_CODE_SELECT_IMAGE = 1000;
 
     public static final String EXTRA_ARTIST_ID = "extra_artist_id";
+
+    @BindView(R.id.activity_artist_layout)
+    LinearLayout layout;
 
     @BindView(R.id.list)
     ObservableListView songListView;
@@ -236,7 +240,7 @@ public class ArtistDetailActivity extends AbsSlidingMusicPanelActivity implement
                                 biographyDialog.setContent(biography);
                             } else {
                                 biographyDialog.dismiss();
-                                Toast.makeText(ArtistDetailActivity.this, getResources().getString(R.string.biography_unavailable), Toast.LENGTH_SHORT).show();
+                                snackbar(R.string.biography_unavailable);
                             }
                         }
                     }
@@ -355,7 +359,7 @@ public class ArtistDetailActivity extends AbsSlidingMusicPanelActivity implement
                         biographyDialog.setContent(biography);
                         biographyDialog.show();
                     } else {
-                        Toast.makeText(ArtistDetailActivity.this, getResources().getString(R.string.biography_unavailable), Toast.LENGTH_SHORT).show();
+                        snackbar(R.string.biography_unavailable);
                     }
                 } else { // force download
                     biographyDialog.show();
@@ -368,7 +372,7 @@ public class ArtistDetailActivity extends AbsSlidingMusicPanelActivity implement
                 startActivityForResult(Intent.createChooser(intent, getString(R.string.pick_from_local_storage)), REQUEST_CODE_SELECT_IMAGE);
                 return true;
             case R.id.action_reset_artist_image:
-                Toast.makeText(ArtistDetailActivity.this, getResources().getString(R.string.updating), Toast.LENGTH_SHORT).show();
+                snackbar(R.string.updating);
                 CustomArtistImageUtil.getInstance(ArtistDetailActivity.this).resetCustomArtistImage(artist);
                 return true;
             case R.id.action_colored_footers:
@@ -478,5 +482,9 @@ public class ArtistDetailActivity extends AbsSlidingMusicPanelActivity implement
         public Artist loadInBackground() {
             return ArtistLoader.getArtist(getContext(), artistId);
         }
+    }
+
+    private void snackbar(int msg) {
+        Snackbar.make(layout, msg, Snackbar.LENGTH_LONG).show();
     }
 }

@@ -44,7 +44,7 @@ android {
         vectorDrawables.useSupportLibrary = true
 
         applicationId 'com.peter1303.phonograph'
-        versionCode 175
+        versionCode 176
         versionName '1.3.2'+ '.' + getDate()
     }
     signingConfigs {

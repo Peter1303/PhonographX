@@ -29,7 +29,7 @@ public class SongTagEditorActivity extends AbsTagEditorActivity implements TextW
     EditText albumTitle;
     @BindView(R.id.artist)
     EditText artist;
-    @BindView(R.id.genre)
+    @BindView(R.id.genres)
     EditText genre;
     @BindView(R.id.year)
     EditText year;

@@ -45,6 +45,8 @@ public class CategoryInfo implements Parcelable {
         SONGS(R.string.songs),
         ALBUMS(R.string.albums),
         ARTISTS(R.string.artists),
+        GENRES(R.string.genres),
+        ONLINE(R.string.online),
         PLAYLISTS(R.string.playlists);
 
         public final int stringRes;

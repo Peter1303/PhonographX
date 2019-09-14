@@ -1,8 +1,9 @@
 package com.peter1303.phonograph.ui.activities;
 
-import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -18,10 +19,11 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceManager;
 import androidx.preference.TwoStatePreference;
 import androidx.appcompat.widget.Toolbar;
+
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import com.afollestad.materialdialogs.color.ColorChooserDialog;
 import com.google.android.material.snackbar.Snackbar;
@@ -38,6 +40,7 @@ import com.peter1303.phonograph.preferences.BlacklistPreferenceDialog;
 import com.peter1303.phonograph.preferences.LibraryPreference;
 import com.peter1303.phonograph.preferences.LibraryPreferenceDialog;
 import com.peter1303.phonograph.ui.activities.base.AbsBaseActivity;
+import com.peter1303.phonograph.util.AppUtil;
 import com.peter1303.phonograph.util.NavigationUtil;
 import com.peter1303.phonograph.util.PreferenceUtil;
 import com.peter1303.phonograph.util.PurchaseUtil;
@@ -50,7 +53,7 @@ import butterknife.ButterKnife;
 
 public class SettingsActivity extends AbsBaseActivity implements ColorChooserDialog.ColorCallback {
 
-    private Context context = this;
+    private static Context context;
 
     private static LinearLayout layout;
 
@@ -65,6 +68,8 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
         ButterKnife.bind(this);
 
         layout = findViewById(R.id.activity_preferences_layout);
+
+        context = this;
 
         setStatusBarColorAuto();
         setNavigationBarColorAuto();
@@ -81,6 +86,10 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
             SettingsFragment frag = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.content_frame);
             if (frag != null) frag.invalidateSettings();
         }
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MainActivity.ACTION_SNACKBAR);
+        registerReceiver(mBroadcastReceive, intentFilter);
     }
 
     @Override
@@ -91,7 +100,7 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
                     Arrays.sort(NonProAllowedColors.PRIMARY_COLORS);
                     if (Arrays.binarySearch(NonProAllowedColors.PRIMARY_COLORS, selectedColor) < 0) {
                         // color wasn't found
-                        Toast.makeText(this, R.string.only_the_first_5_colors_available, Toast.LENGTH_LONG).show();
+                        snackbar(R.string.only_the_first_5_colors_available);
                         startActivity(new Intent(this, PurchaseActivity.class));
                         return;
                     }
@@ -105,7 +114,7 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
                     Arrays.sort(NonProAllowedColors.ACCENT_COLORS);
                     if (Arrays.binarySearch(NonProAllowedColors.ACCENT_COLORS, selectedColor) < 0) {
                         // color wasn't found
-                        Toast.makeText(this, R.string.only_the_first_5_colors_available, Toast.LENGTH_LONG).show();
+                        snackbar(R.string.only_the_first_5_colors_available);
                         startActivity(new Intent(this, PurchaseActivity.class));
                         return;
                     }
@@ -191,7 +200,7 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
         public boolean onPreferenceTreeClick(Preference preference) {
             if (preference == findPreference("id")) {
                 clipboard(Objects.requireNonNull(getContext()), App.ANDROID_ID);
-                Snackbar.make(layout, R.string.snackbar_copied_id, Snackbar.LENGTH_LONG).show();
+                snackbar(R.string.snackbar_copied_id);
             }
             return super.onPreferenceTreeClick(preference);
         }
@@ -217,7 +226,7 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
             generalTheme.setOnPreferenceChangeListener((preference, o) -> {
                 String themeName = (String) o;
                 if (themeName.equals("black") && !new PurchaseUtil(Objects.requireNonNull(getContext())).isProVersion()) {
-                    Toast.makeText(getActivity(), R.string.black_theme_is_a_pro_feature, Toast.LENGTH_LONG).show();
+                    snackbar(R.string.black_theme_is_a_pro_feature);
                     startActivity(new Intent(getContext(), PurchaseActivity.class));
                     return false;
                 }
@@ -326,7 +335,6 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
             final Preference equalizer = findPreference("equalizer");
             if (!hasEqualizer()) {
                 equalizer.setEnabled(false);
-                equalizer.setSummary(getResources().getString(R.string.no_equalizer));
             }
             equalizer.setOnPreferenceClickListener(preference -> {
                 NavigationUtil.openEqualizer(getActivity());
@@ -350,4 +358,29 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
             }
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mBroadcastReceive);
+    }
+
+    private static void snackbar(int msg) {
+        snackbar(context.getString(msg));
+    }
+
+    private static void snackbar(String msg) {
+        Snackbar.make(layout, msg, Snackbar.LENGTH_LONG).show();
+    }
+
+    private static BroadcastReceiver mBroadcastReceive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String msg = intent.getStringExtra("msg");
+            if (msg != null) {
+                snackbar(msg);
+                Log.e("Phonograph Broadcast: ", msg);
+            }
+        }
+    };
 }

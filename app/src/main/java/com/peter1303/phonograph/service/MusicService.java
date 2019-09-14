@@ -1,5 +1,6 @@
 package com.peter1303.phonograph.service;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
@@ -14,7 +15,14 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
+import android.media.audiofx.AcousticEchoCanceler;
 import android.media.audiofx.AudioEffect;
+import android.media.audiofx.AutomaticGainControl;
+import android.media.audiofx.BassBoost;
+import android.media.audiofx.Equalizer;
+import android.media.audiofx.LoudnessEnhancer;
+import android.media.audiofx.NoiseSuppressor;
+import android.media.audiofx.Virtualizer;
 import android.media.session.MediaSession;
 import android.os.Binder;
 import android.os.Build;
@@ -30,10 +38,11 @@ import android.provider.MediaStore;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.widget.Toast;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.bumptech.glide.BitmapRequestBuilder;
 import com.bumptech.glide.Glide;
@@ -59,8 +68,10 @@ import com.peter1303.phonograph.service.notification.PlayingNotification;
 import com.peter1303.phonograph.service.notification.PlayingNotificationImpl;
 import com.peter1303.phonograph.service.notification.PlayingNotificationImpl24;
 import com.peter1303.phonograph.service.playback.Playback;
+import com.peter1303.phonograph.util.AppUtil;
 import com.peter1303.phonograph.util.MusicUtil;
 import com.peter1303.phonograph.util.PreferenceUtil;
+import com.peter1303.phonograph.util.SPUtil;
 import com.peter1303.phonograph.util.Util;
 
 import java.lang.ref.WeakReference;
@@ -175,10 +186,19 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
 
     private Handler uiThreadHandler;
 
+    private BassBoost mBass;
+    private Equalizer mEqualizer;
+    private AcousticEchoCanceler canceler;
+    private AutomaticGainControl control;
+    private NoiseSuppressor suppressor;
+    private LoudnessEnhancer loudnessEnhancer;
+    private Virtualizer mVirtualizer;
+
     private static String getTrackUri(@NonNull Song song) {
         return MusicUtil.getSongFileUri(song.id).toString();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onCreate() {
         super.onCreate();
@@ -230,6 +250,8 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
         return audioManager;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @SuppressLint("WrongConstant")
     private void setupMediaSession() {
         ComponentName mediaButtonReceiverComponentName = new ComponentName(getApplicationContext(), MediaButtonIntentReceiver.class);
 
@@ -275,10 +297,7 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
                 return MediaButtonIntentReceiver.handleIntent(MusicService.this, mediaButtonEvent);
             }
         });
-
-        mediaSession.setFlags(MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS
-                | MediaSession.FLAG_HANDLES_MEDIA_BUTTONS);
-
+        mediaSession.setFlags(MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS | MediaSession.FLAG_HANDLES_MEDIA_BUTTONS);
         mediaSession.setMediaButtonReceiver(mediaButtonReceiverPendingIntent);
     }
 
@@ -310,7 +329,7 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
                             if (playlist instanceof AbsCustomPlaylist) {
                                 playlistSongs = ((AbsCustomPlaylist) playlist).getSongs(getApplicationContext());
                             } else {
-                                //noinspection unchecked
+                                // noinspection unchecked
                                 playlistSongs = (List) PlaylistSongLoader.getPlaylistSongList(getApplicationContext(), playlist.id);
                             }
                             if (!playlistSongs.isEmpty()) {
@@ -325,10 +344,10 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
                                     openQueue(playlistSongs, 0, true);
                                 }
                             } else {
-                                Toast.makeText(getApplicationContext(), R.string.playlist_is_empty, Toast.LENGTH_LONG).show();
+                                AppUtil.sendMsg(getApplicationContext(), getApplicationContext().getString(R.string.playlist_is_empty));
                             }
                         } else {
-                            Toast.makeText(getApplicationContext(), R.string.playlist_is_empty, Toast.LENGTH_LONG).show();
+                            AppUtil.sendMsg(getApplicationContext(), getApplicationContext().getString(R.string.playlist_is_empty));
                         }
                         break;
                     case ACTION_REWIND:
@@ -367,6 +386,267 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
         wakeLock.release();
 
         sendBroadcast(new Intent("com.kabouzeid.gramophone.PHONOGRAPH_MUSIC_SERVICE_DESTROYED"));
+
+        try {
+            mEqualizer.release();
+            mVirtualizer.release();
+            canceler.release();
+            control.release();
+            suppressor.release();
+            mBass.release();
+            loudnessEnhancer.release();
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
+    }
+
+    //以下为音效部分
+    private void initialAudioEffect(final int audioSessionId) {
+        new Thread(() -> {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    loudnessEnhancer = new LoudnessEnhancer(audioSessionId);
+                }
+                mBass = new BassBoost(0, audioSessionId);
+                mVirtualizer = new Virtualizer(0, audioSessionId);
+                mEqualizer = new Equalizer(0, audioSessionId);
+                canceler = AcousticEchoCanceler.create(audioSessionId);
+                control = AutomaticGainControl.create(audioSessionId);
+                suppressor = NoiseSuppressor.create(audioSessionId);
+                getPreference();
+            } catch (Exception e) {
+                Log.e("Phonograph", e.toString());
+            }
+        }).start();
+    }
+
+    public void setEqualizer(boolean b) {
+        try {
+            mEqualizer.setEnabled(b);
+            Log.v("开启", "mEqualizer: " + mEqualizer.getEnabled());
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
+
+    }
+
+    public void setEqualizerBandLevel(Short band, Short level) {
+        try {
+            mEqualizer.setBandLevel(band, level);
+            Log.v("开启", "mEqualizerLevel: " + mEqualizer.getEnabled());
+            Log.v("开启", "level: " + level.toString());
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
+    }
+
+    public void setCanceler(boolean b) {
+        try {
+            canceler.setEnabled(b);
+            Log.v("开启", "canceler: " + canceler.getEnabled());
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
+    }
+
+    public void setControl(boolean b) {
+        try {
+            control.setEnabled(b);
+            Log.v("开启", "control: " + control.getEnabled());
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
+    }
+
+    public void setSuppressor(boolean b) {
+        try {
+            suppressor.setEnabled(b);
+            Log.v("开启", "suppressor: " + suppressor.getEnabled());
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
+
+    }
+
+    public void setBass(boolean b) {
+        try {
+            mBass.setEnabled(b);
+            Log.v("开启", "bass: " + mBass.getEnabled());
+            loudnessEnhancer.setEnabled(mBass.getEnabled() || mVirtualizer.getEnabled());
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
+    }
+
+    public void setBassStrength(Short strength) {
+        try {
+            mBass.setStrength(strength);
+            Log.v("开启", "setBassStrength: " + strength.toString());
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
+    }
+
+    public void setVirtualizer(Boolean b) {
+        try {
+            mVirtualizer.setEnabled(b);
+            Log.v("开启", "virtualizer: " + mVirtualizer.getEnabled());
+            loudnessEnhancer.setEnabled(mVirtualizer.getEnabled() || mBass.getEnabled());
+            Log.v("开启", "增强" + loudnessEnhancer.getEnabled());
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
+    }
+
+    public void setVirtualizerStrength(Short s) {
+        try {
+            mVirtualizer.setStrength(s);
+            Log.v("开启", "setVirtualizerStrength: " + s.toString());
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
+    }
+
+    private void getPreference() {
+        SPUtil sp = new SPUtil(getApplicationContext(), "audioEffect");
+        Log.v("开启", "getPreference");
+        try {
+            //超强音量
+            if ((sp.getBoolean("Bass", false) || sp.getBoolean("Virtualizer", false))) {
+                loudnessEnhancer.setEnabled(true);
+                Log.v("开启", "loudness");
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    loudnessEnhancer.setTargetGain(500);
+                }
+
+            } else {
+                loudnessEnhancer.setEnabled(false);
+            }
+            //虚拟环绕
+            if (!sp.getBoolean("Virtualizer", false)) {
+                setVirtualizer(false);
+            } else {
+                setVirtualizer(true);
+                setVirtualizerStrength((short) sp.getInt("Virtualizer_seekBar", 0));
+                Log.v("强度", "Virtualizer" + sp.getInt("Virtualizer_seekBar", 0));
+            }
+            //低音增强
+            Log.v("开启", String.valueOf(sp.getBoolean("Bass", false)));
+            if (!sp.getBoolean("Bass", false)) {
+                setBass(false);
+            } else {
+                setBass(true);
+                Log.v("开启", "Bass" + sp.getBoolean("Bass", false));
+                setBassStrength((short) sp.getInt("Bass_seekBar", 0));
+                Log.v("强度", "Bass" + sp.getInt("Bass_seekBar", 0));
+            }
+            //均衡器
+            if (sp.getBoolean("Equalizer", false)) {
+                mEqualizer.setEnabled(true);
+                Log.v("开启", "Equalizer");
+                switch (sp.getInt("Spinner", 0)) {
+                    case 0:
+                        mEqualizer.setBandLevel((short) 0, (short) 300);
+                        mEqualizer.setBandLevel((short) 1, (short) 0);
+                        mEqualizer.setBandLevel((short) 2, (short) 0);
+                        mEqualizer.setBandLevel((short) 3, (short) 0);
+                        mEqualizer.setBandLevel((short) 4, (short) 300);
+                        return;
+                    case 1:
+                        mEqualizer.setBandLevel((short) 0, (short) 500);
+                        mEqualizer.setBandLevel((short) 1, (short) 300);
+                        mEqualizer.setBandLevel((short) 2, (short) -200);
+                        mEqualizer.setBandLevel((short) 3, (short) 400);
+                        mEqualizer.setBandLevel((short) 4, (short) 400);
+                        return;
+                    case 2:
+                        mEqualizer.setBandLevel((short) 0, (short) 600);
+                        mEqualizer.setBandLevel((short) 1, (short) 0);
+                        mEqualizer.setBandLevel((short) 2, (short) 200);
+                        mEqualizer.setBandLevel((short) 3, (short) 400);
+                        mEqualizer.setBandLevel((short) 4, (short) 100);
+                        return;
+                    case 3:
+                        mEqualizer.setBandLevel((short) 0, (short) 0);
+                        mEqualizer.setBandLevel((short) 1, (short) 0);
+                        mEqualizer.setBandLevel((short) 2, (short) 0);
+                        mEqualizer.setBandLevel((short) 3, (short) 0);
+                        mEqualizer.setBandLevel((short) 4, (short) 0);
+                        return;
+                    case 4:
+                        mEqualizer.setBandLevel((short) 0, (short) 300);
+                        mEqualizer.setBandLevel((short) 1, (short) 0);
+                        mEqualizer.setBandLevel((short) 2, (short) 0);
+                        mEqualizer.setBandLevel((short) 3, (short) 200);
+                        mEqualizer.setBandLevel((short) 4, (short) -100);
+                        return;
+                    case 5:
+                        mEqualizer.setBandLevel((short) 0, (short) 400);
+                        mEqualizer.setBandLevel((short) 1, (short) 100);
+                        mEqualizer.setBandLevel((short) 2, (short) 700);
+                        mEqualizer.setBandLevel((short) 3, (short) 100);
+                        mEqualizer.setBandLevel((short) 4, (short) 0);
+                        return;
+                    case 6:
+                        mEqualizer.setBandLevel((short) 0, (short) 500);
+                        mEqualizer.setBandLevel((short) 1, (short) 300);
+                        mEqualizer.setBandLevel((short) 2, (short) 0);
+                        mEqualizer.setBandLevel((short) 3, (short) 100);
+                        mEqualizer.setBandLevel((short) 4, (short) 300);
+                        return;
+                    case 7:
+                        mEqualizer.setBandLevel((short) 0, (short) 400);
+                        mEqualizer.setBandLevel((short) 1, (short) 200);
+                        mEqualizer.setBandLevel((short) 2, (short) -200);
+                        mEqualizer.setBandLevel((short) 3, (short) 200);
+                        mEqualizer.setBandLevel((short) 4, (short) 500);
+                        return;
+                    case 8:
+                        mEqualizer.setBandLevel((short) 0, (short) -100);
+                        mEqualizer.setBandLevel((short) 1, (short) 200);
+                        mEqualizer.setBandLevel((short) 2, (short) 500);
+                        mEqualizer.setBandLevel((short) 3, (short) 100);
+                        mEqualizer.setBandLevel((short) 4, (short) -200);
+                        return;
+                    case 9:
+                        mEqualizer.setBandLevel((short) 0, (short) 500);
+                        mEqualizer.setBandLevel((short) 1, (short) 300);
+                        mEqualizer.setBandLevel((short) 2, (short) -100);
+                        mEqualizer.setBandLevel((short) 3, (short) 300);
+                        mEqualizer.setBandLevel((short) 4, (short) 500);
+                        return;
+                    case 10:
+                        mEqualizer.setBandLevel((short) 0, (short) 0);
+                        mEqualizer.setBandLevel((short) 1, (short) 800);
+                        mEqualizer.setBandLevel((short) 2, (short) 400);
+                        mEqualizer.setBandLevel((short) 3, (short) 100);
+                        mEqualizer.setBandLevel((short) 4, (short) 1000);
+                        return;
+                    case 11:
+                        mEqualizer.setBandLevel((short) 0, (short) -170);
+                        mEqualizer.setBandLevel((short) 1, (short) 270);
+                        mEqualizer.setBandLevel((short) 2, (short) 50);
+                        mEqualizer.setBandLevel((short) 3, (short) -220);
+                        mEqualizer.setBandLevel((short) 4, (short) 200);
+                        return;
+                    default:
+                }
+            } else {
+                mEqualizer.setEnabled(false);
+            }
+            //次要
+            if (AcousticEchoCanceler.isAvailable()) {
+                canceler.setEnabled(sp.getBoolean("Canceler", false));
+            }
+            if (AutomaticGainControl.isAvailable()) {
+                control.setEnabled(sp.getBoolean("AutoGain", false));
+            }
+            if (NoiseSuppressor.isAvailable()) {
+                suppressor.setEnabled(sp.getBoolean("Suppressor", false));
+            }
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
     }
 
     @Override
@@ -829,7 +1109,7 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
         if (openTrackAndPrepareNextAt(position)) {
             play();
         } else {
-            Toast.makeText(this, getResources().getString(R.string.unplayable_file), Toast.LENGTH_SHORT).show();
+            AppUtil.sendMsg(this, getResources().getString(R.string.unplayable_file));
         }
     }
 
@@ -849,6 +1129,7 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
                         playSongAt(getPosition());
                     } else {
                         playback.start();
+                        initialAudioEffect(playback.getAudioSessionId());
                         if (!becomingNoisyReceiverRegistered) {
                             registerReceiver(becomingNoisyReceiver, becomingNoisyReceiverIntentFilter);
                             becomingNoisyReceiverRegistered = true;
@@ -865,11 +1146,11 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
                     }
                 }
             } else {
-                Toast.makeText(this, getResources().getString(R.string.audio_focus_denied), Toast.LENGTH_SHORT).show();
+                AppUtil.sendMsg(this, getApplicationContext().getString(R.string.audio_focus_denied));
             }
         }
     }
-
+    /*
     public void playSongs(List<Song> songs, int shuffleMode) {
         if (songs != null && !songs.isEmpty()) {
             if (shuffleMode == SHUFFLE_MODE_SHUFFLE) {
@@ -884,10 +1165,10 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
             }
             play();
         } else {
-            Toast.makeText(getApplicationContext(), R.string.playlist_is_empty, Toast.LENGTH_LONG).show();
+            sendMsg(this, getApplicationContext().getString(R.string.playlist_is_empty));
         }
     }
-
+     */
     public void playPreviousSong(boolean force) {
         playSongAt(getPreviousPosition(force));
     }

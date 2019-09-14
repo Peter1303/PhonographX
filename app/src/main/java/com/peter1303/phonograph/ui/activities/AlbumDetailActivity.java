@@ -17,14 +17,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.afollestad.materialcab.MaterialCab;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.afollestad.materialdialogs.util.DialogUtils;
 import com.bumptech.glide.Glide;
 import com.github.ksoichiro.android.observablescrollview.ObservableRecyclerView;
+import com.google.android.material.snackbar.Snackbar;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
 import com.kabouzeid.appthemehelper.util.MaterialValueHelper;
 import com.peter1303.phonograph.R;
@@ -73,6 +74,9 @@ public class AlbumDetailActivity extends AbsSlidingMusicPanelActivity implements
     public static final String EXTRA_ALBUM_ID = "extra_album_id";
 
     private Album album;
+
+    @BindView(R.id.activity_album_layout)
+    LinearLayout layout;
 
     @BindView(R.id.list)
     ObservableRecyclerView recyclerView;
@@ -276,7 +280,7 @@ public class AlbumDetailActivity extends AbsSlidingMusicPanelActivity implements
                                 wikiDialog.setContent(wiki);
                             } else {
                                 wikiDialog.dismiss();
-                                Toast.makeText(AlbumDetailActivity.this, getResources().getString(R.string.wiki_unavailable), Toast.LENGTH_SHORT).show();
+                                snackbar(R.string.wiki_unavailable);
                             }
                         }
                     }
@@ -337,7 +341,7 @@ public class AlbumDetailActivity extends AbsSlidingMusicPanelActivity implements
                         wikiDialog.setContent(wiki);
                         wikiDialog.show();
                     } else {
-                        Toast.makeText(this, getResources().getString(R.string.wiki_unavailable), Toast.LENGTH_SHORT).show();
+                        snackbar(R.string.wiki_unavailable);
                     }
                 } else {
                     wikiDialog.show();
@@ -455,5 +459,9 @@ public class AlbumDetailActivity extends AbsSlidingMusicPanelActivity implements
         public Album loadInBackground() {
             return AlbumLoader.getAlbum(getContext(), albumId);
         }
+    }
+
+    private void snackbar(int msg) {
+        Snackbar.make(layout, msg, Snackbar.LENGTH_LONG).show();
     }
 }

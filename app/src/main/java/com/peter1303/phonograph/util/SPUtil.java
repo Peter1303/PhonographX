@@ -12,13 +12,27 @@ public class SPUtil {
         sharedPreferences = context.getSharedPreferences(context.getPackageName() + "_preferences", Context.MODE_PRIVATE);
     }
 
+    public SPUtil(Context context,String name) {
+        sharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
+    }
+
     @SuppressLint("ApplySharedPref")
     public void save (String tag, boolean value) {
         editor = sharedPreferences.edit();
         editor.putBoolean(tag, value).commit();
     }
 
+    @SuppressLint("ApplySharedPref")
+    public void save(String tag, int value) {
+        editor = sharedPreferences.edit();
+        editor.putInt(tag, value).commit();
+    }
+
     public boolean getBoolean(String tag, boolean d) {
         return sharedPreferences.getBoolean(tag, d);
+    }
+
+    public int getInt(String tag, int d) {
+        return sharedPreferences.getInt(tag, d);
     }
 }

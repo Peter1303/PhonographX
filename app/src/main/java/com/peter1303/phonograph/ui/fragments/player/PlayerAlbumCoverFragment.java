@@ -1,6 +1,7 @@
 package com.peter1303.phonograph.ui.fragments.player;
 
 import android.animation.Animator;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.viewpager.widget.ViewPager;
@@ -64,6 +65,7 @@ public class PlayerAlbumCoverFragment extends AbsMusicServiceFragment implements
         return view;
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);

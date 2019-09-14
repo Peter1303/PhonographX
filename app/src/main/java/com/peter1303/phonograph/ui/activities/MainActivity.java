@@ -1,8 +1,10 @@
 package com.peter1303.phonograph.ui.activities;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -13,6 +15,7 @@ import android.provider.MediaStore;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.android.material.navigation.NavigationView;
+
 import androidx.fragment.app.Fragment;
 import androidx.drawerlayout.widget.DrawerLayout;
 import android.util.Log;
@@ -21,14 +24,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.appthemehelper.util.NavigationViewUtil;
-import com.peter1303.phonograph.App;
 import com.peter1303.phonograph.R;
 import com.peter1303.phonograph.dialogs.ChangelogDialog;
 import com.peter1303.phonograph.dialogs.ScanMediaFolderChooserDialog;
@@ -64,6 +66,19 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     // TODO 使用网易云音乐的歌词翻译
     // TODO 开始页设置
     // TODO 保持屏幕常亮设置
+    // TODO 无网络搜索崩溃
+    // TODO‌从黑名单中添加对话框应移除标题
+    // TODO ‌不应去除 流派
+    // TODO ‌增加选项「在线」
+    // TODO ‌更新标签后没有刷新菜单
+    // TODO ‌双击滑动到顶端
+    // TODO ‌不能更改图片
+    // TODO ‌修改标签界面的保存应改为菜单
+    // TODO ‌排序方式应增加「按歌手」排序
+    //‌
+    // 获得 /sdcard/Android/data/com.tencent.mobileqq/files/head 目录的字符串 String path = getExternalFilesDir("head").getAbsolutePath();
+
+    public static String ACTION_SNACKBAR = "snackbar";
 
     private Context context = this;
 
@@ -108,11 +123,16 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         if (!checkShowIntro()) {
             showChangelog();
         }
+
+        ACTION_SNACKBAR = context.getPackageName() + "." + ACTION_SNACKBAR;
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ACTION_SNACKBAR);
+        registerReceiver(mBroadcastReceive, intentFilter);
     }
 
     private void setMusicChooser(int key) {
         if (!new PurchaseUtil(context).isProVersion() && key == FOLDERS) {
-            Toast.makeText(this, R.string.folder_view_is_a_pro_feature, Toast.LENGTH_LONG).show();
+            Snackbar.make(drawerLayout, R.string.folder_view_is_a_pro_feature, Snackbar.LENGTH_LONG).show();
             startActivityForResult(new Intent(this, PurchaseActivity.class), PURCHASE_REQUEST);
             key = LIBRARY;
         }
@@ -378,6 +398,23 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    BroadcastReceiver mBroadcastReceive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String msg = intent.getStringExtra("msg");
+            if (msg != null) {
+                Snackbar.make(drawerLayout, msg, Snackbar.LENGTH_LONG).show();
+                Log.e("Phonograph Broadcast: ", msg);
+            }
+        }
+    };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mBroadcastReceive);
     }
 
     public interface MainActivityFragmentCallbacks {

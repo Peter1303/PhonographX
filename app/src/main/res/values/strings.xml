@@ -35,18 +35,19 @@
     <string name="albums">专辑</string>
     <string name="artists">歌手</string>
     <string name="songs">歌曲</string>
+    <string name="genres">流派</string>
+    <string name="online">在线</string>
     <string name="playlists">歌单</string>
 
-    <string name="unplayable_file">\u65e0\u6cd5\u64ad\u653e\u8be5\u6b4c\u66f2\u3002</string>
-    <string name="biography_unavailable">\u627e\u4e0d\u5230\u8be5\u827a\u672f\u5bb6\u7684\u4e2a\u4eba\u4fe1\u606f\u3002</string>
-    <string name="wiki_unavailable">\u627e\u4e0d\u5230\u6b64\u4e13\u8f91\u7684\u767e\u79d1\u6570\u636e\u3002</string>
+    <string name="unplayable_file">无法播放该歌曲</string>
+    <string name="biography_unavailable">找不到该歌手的信息</string>
+    <string name="wiki_unavailable">找不到该专辑的百科数据</string>
 
     <string name="biography">歌手简介</string>
     <string name="wiki">百科一下</string>
     <string name="audio_focus_denied">无法获取音频焦点</string>
     <string name="album">专辑</string>
     <string name="artist">歌手</string>
-    <string name="genre">流派</string>
     <string name="album_artist">专辑歌手</string>
     <string name="year">年份</string>
     <string name="track_hint">"音轨（如用 2 表示第 2 首歌或用 3004 表示 CD3 里的第 4 首歌）"</string>
@@ -69,7 +70,7 @@
     <string name="label_playing_queue">播放队列</string>
 
     <string name="no_results">没有找到结果</string>
-    <string name="updating">正在更新…</string>
+    <string name="updating">正在更新</string>
 
     <string name="added_title_to_playing_queue">"此歌曲已加入播放队列"</string>
     <string name="added_x_titles_to_playing_queue">%1$d 首歌曲已加入播放队列</string>
@@ -130,6 +131,7 @@
 
     <string name="dialog_sleeper_min">分</string>
 
+    <!--SettingsActivity-->
     <string name="pref_header_colors">颜色</string>
     <string name="pref_header_now_playing_screen">正在播放界面</string>
     <string name="pref_title_general_theme">全局主题</string>
@@ -153,6 +155,7 @@
     <string name="pref_title_last_added_interval">最近添加歌单间隔</string>
     <string name="pref_title_synchronized_lyrics_show">显示同步歌词</string>
     <string name="pref_title_remember_last_tab">记住最后打开页面</string>
+    <string name="pref_title_audio_default">使用系统自带均衡器</string>
 
     <string name="no_equalizer">没有找到均衡器</string>
     <string name="no_audio_ID">"请在播放歌曲后再次尝试此操作"</string>
@@ -178,11 +181,12 @@
     <string name="playlist_name_empty">歌单名称</string>
     <string name="song">歌曲</string>
 
+    <!--SettingsActivity-->
     <string name="pref_summary_album_art_on_lockscreen">使用当前播放曲目的专辑封面作为锁屏壁纸</string>
     <string name="pref_summary_blurred_album_art">模糊化显示锁屏界面内的专辑封面此功能或与第三方应用及桌面插件产生冲突</string>
     <string name="pref_summary_classic_notification">使用经典通知样式</string>
-    <string name="pref_summary_colored_notification">"\u4f7f\u7528\u4e0e\u4e13\u8f91\u5c01\u9762\u76f8\u5339\u914d\u7684\u989c\u8272\u7740\u8272\u901a\u77e5\u80cc\u666f\u8272\u3002"</string>
-    <string name="pref_summary_gapless_playback">"在某些设备上会造成播放问题"</string>
+    <string name="pref_summary_colored_notification">使用与专辑封面相匹配的颜色着色通知背景色</string>
+    <string name="pref_summary_gapless_playback">在某些设备上会造成播放问题</string>
     <string name="pref_summary_ignore_media_store_artwork">可以提高专辑封面图片的质量但加载时间也会更长仅当遇到专辑封面像素过低时建议开启</string>
     <string name="pref_summary_colored_navigation_bar">用主色调着色导航栏</string>
     <string name="pref_summary_colored_app_shortcuts">用主色调着色应用快捷方式</string>
@@ -190,7 +194,7 @@
     <string name="pref_summary_synchronized_lyrics_show">当前仅支持 LRC 格式同步歌词内嵌或外置均可</string>
     <string name="pref_summary_remember_last_tab">启动时跳转到最后打开页面</string>
 
-    <string name="could_not_download_album_cover">"\u65e0\u6cd5\u4e0b\u8f7d\u5230\u5339\u914d\u7684\u4e13\u8f91\u5c01\u9762\u3002"</string>
+    <string name="could_not_download_album_cover">无法下载到匹配的专辑封面</string>
     <string name="search_hint">搜索歌曲库</string>
     <string name="favorites">收藏夹</string>
     <string name="last_added">最近添加</string>
@@ -315,7 +319,7 @@
     <string name="add_action">添加</string>
     <string name="blacklist">黑名单</string>
     <string name="remove_from_blacklist">从黑名单中移除</string>
-    <string name="do_you_want_to_remove_from_the_blacklist"><![CDATA[从黑名单中移除 <b>%1$s</b> ？]]></string>
+    <string name="do_you_want_to_remove_from_the_blacklist"><![CDATA[从黑名单中移除 <b>%1$s</b>]]></string>
     <string name="clear_blacklist">删除黑名单</string>
     <string name="do_you_want_to_clear_the_blacklist">一言既出驷马难追 (/▽＼)</string>
 
@@ -354,7 +358,48 @@
     <string name="dialog_ringtone_title">设为铃声</string>
 
     <string name="snackbar_copied_id">已复制设备ID</string>
+    <string name="snackbar_empty_result">真的没有啦</string>
 
     <string name="activity_search_switch">从网易云音乐中搜索</string>
+
+    <!--Equalizer Activity-->
+    <string name="snackbar_not_support_acoustic_echo_canceler">您的手机不支持回声消除</string>
+    <string name="snackbar_not_support_automatic_gain_control">您的手机不支持自动增强</string>
+    <string name="snackbar_not_support_noise_suppressor">您的手机不支持智能降噪</string>
+
+    <string name="activity_equalizer_title_general">通用</string>
+    <string name="activity_equalizer_title_base">基本音效</string>
+    <string name="activity_equalizer_title_special">特殊音效</string>
+
+    <string name="activity_equalizer_switch_general">均衡器</string>
+    <string name="activity_equalizer_switch_bass">低音增强</string>
+    <string name="activity_equalizer_switch_virtualizer">虚拟环绕</string>
+    <string name="activity_equalizer_switch_echo">回声消除</string>
+    <string name="activity_equalizer_switch_auto">自动增强</string>
+    <string name="activity_equalizer_switch_noise">智能降噪</string>
+
+    <string name="activity_equalizer_summary_echo">可以消除某些特殊状态下产生的回声</string>
+    <string name="activity_equalizer_summary_auto">用于自动平衡软件内所有音乐的音量</string>
+    <string name="activity_equalizer_summary_noise">智能降低播放某些音乐时产生的噪音</string>
+    <string name="activity_equalizer_summary_virtualizer">处理多声道的信号，让人感觉到环绕声的效果</string>
+    <string name="activity_equalizer_summary_bass">可以产生更加深邃、浑厚、富有弹性的低音</string>
+    <string name="activity_equalizer_summary_preset">预设均衡器配置</string>
+    <string name="activity_equalizer_summary_equalizer">调节不同频率的电信号的补偿声效和声场的缺陷</string>
+
+    <string-array name="preset_equalizer">
+        <item>原音音效</item>
+        <item>古典音乐</item>
+        <item>舞曲音乐</item>
+        <item>平淡音乐</item>
+        <item>民谣音乐</item>
+        <item>重金属</item>
+        <item>嘻哈音乐</item>
+        <item>爵士音乐</item>
+        <item>流行音乐</item>
+        <item>摇滚音乐</item>
+        <item>电子音乐</item>
+        <item>小型喇叭</item>
+        <item>自定义</item>
+    </string-array>
 
 </resources>

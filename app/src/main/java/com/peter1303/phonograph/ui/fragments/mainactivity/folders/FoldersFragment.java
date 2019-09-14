@@ -15,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
 import android.widget.PopupMenu;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,6 +45,7 @@ import com.peter1303.phonograph.misc.WrappedAsyncTaskLoader;
 import com.peter1303.phonograph.model.Song;
 import com.peter1303.phonograph.ui.activities.MainActivity;
 import com.peter1303.phonograph.ui.fragments.mainactivity.AbsMainActivityFragment;
+import com.peter1303.phonograph.util.AppUtil;
 import com.peter1303.phonograph.util.FileUtil;
 import com.peter1303.phonograph.util.PhonographColorUtil;
 import com.peter1303.phonograph.util.PreferenceUtil;
@@ -389,7 +389,7 @@ public class FoldersFragment extends AbsMainActivityFragment implements MainActi
                         return true;
                     case R.id.action_set_as_start_directory:
                         PreferenceUtil.getInstance(getActivity()).setStartDirectory(file);
-                        Toast.makeText(getActivity(), String.format(getString(R.string.new_start_directory), file.getPath()), Toast.LENGTH_SHORT).show();
+                        AppUtil.sendMsg(getActivity(), String.format(getString(R.string.new_start_directory), file.getPath()));
                         return true;
                     case R.id.action_scan:
                         new ArrayListPathsAsyncTask(getActivity(), this::scanPaths).execute(new ArrayListPathsAsyncTask.LoadingInfo(file, AUDIO_FILE_FILTER));
@@ -447,7 +447,7 @@ public class FoldersFragment extends AbsMainActivityFragment implements MainActi
     private void scanPaths(@Nullable String[] toBeScanned) {
         if (getActivity() == null) return;
         if (toBeScanned == null || toBeScanned.length < 1) {
-            Toast.makeText(getActivity(), R.string.nothing_to_scan, Toast.LENGTH_SHORT).show();
+            AppUtil.sendMsg(getActivity(), getString(R.string.nothing_to_scan));
         } else {
             MediaScannerConnection.scanFile(getActivity().getApplicationContext(), toBeScanned, null, new UpdateToastMediaScannerCompletionListener(getActivity(), toBeScanned));
         }

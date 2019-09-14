@@ -514,11 +514,14 @@ public final class PreferenceUtil {
         return getDefaultLibraryCategoryInfos();
     }
 
+    // 添加的 分类
     public List<CategoryInfo> getDefaultLibraryCategoryInfos() {
         List<CategoryInfo> defaultCategoryInfos = new ArrayList<>(5);
         defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.SONGS, true));
         defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.ALBUMS, true));
         defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.ARTISTS, true));
+        defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.GENRES, true));
+        defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.ONLINE, true));
         defaultCategoryInfos.add(new CategoryInfo(CategoryInfo.Category.PLAYLISTS, true));
         return defaultCategoryInfos;
     }

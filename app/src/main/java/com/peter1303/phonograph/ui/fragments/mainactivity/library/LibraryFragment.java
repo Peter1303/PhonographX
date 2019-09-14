@@ -39,6 +39,7 @@ import com.peter1303.phonograph.ui.fragments.mainactivity.AbsMainActivityFragmen
 import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.AbsLibraryPagerRecyclerViewCustomGridSizeFragment;
 import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.AlbumsFragment;
 import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.ArtistsFragment;
+import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.OnlineFragment;
 import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.PlaylistsFragment;
 import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.SongsFragment;
 import com.peter1303.phonograph.util.NavigationUtil;
@@ -211,6 +212,13 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
             menu.removeItem(R.id.action_colored_footers);
             menu.removeItem(R.id.action_sort_order);
         }
+        // 是否为 在线
+        if (currentFragment instanceof OnlineFragment) {
+            menu.removeItem(R.id.action_search);
+            menu.removeItem(R.id.action_sort_order);
+        } else {
+            menu.removeItem(R.id.action_input_search);
+        }
         Activity activity = getActivity();
         if (activity == null) return;
         ToolbarContentTintHelper.handleOnCreateOptionsMenu(getActivity(), toolbar, menu, ATHToolbarActivity.getToolbarBackgroundColor(toolbar));
@@ -255,7 +263,6 @@ public class LibraryFragment extends AbsMainActivityFragment implements CabHolde
                 return true;
             case R.id.action_search:
                 startActivity(new Intent(getActivity(), SearchActivity.class));
-                Objects.requireNonNull(getActivity()).overridePendingTransition(R.anim.anim_fade_in, R.anim.anim_fade_out);
                 return true;
         }
         return super.onOptionsItemSelected(item);

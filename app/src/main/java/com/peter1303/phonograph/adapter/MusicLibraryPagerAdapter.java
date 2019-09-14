@@ -12,6 +12,8 @@ import android.view.ViewGroup;
 import com.peter1303.phonograph.model.CategoryInfo;
 import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.AlbumsFragment;
 import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.ArtistsFragment;
+import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.GenresFragment;
+import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.OnlineFragment;
 import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.PlaylistsFragment;
 import com.peter1303.phonograph.ui.fragments.mainactivity.library.pager.SongsFragment;
 import com.peter1303.phonograph.util.PreferenceUtil;
@@ -149,6 +151,8 @@ public class MusicLibraryPagerAdapter extends FragmentPagerAdapter {
         SONGS(SongsFragment.class),
         ALBUMS(AlbumsFragment.class),
         ARTISTS(ArtistsFragment.class),
+        GENRES(GenresFragment.class),
+        ONLINE(OnlineFragment.class),
         PLAYLISTS(PlaylistsFragment.class);
 
         private final Class<? extends Fragment> mFragmentClass;

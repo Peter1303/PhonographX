@@ -11,12 +11,13 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.FrameLayout;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.google.android.material.snackbar.Snackbar;
 import com.kabouzeid.appthemehelper.util.ATHUtil;
 import com.kabouzeid.appthemehelper.util.ToolbarContentTintHelper;
 import com.peter1303.phonograph.R;
@@ -45,12 +46,15 @@ import retrofit2.Response;
 
 public class AlbumTagEditorActivity extends AbsTagEditorActivity implements TextWatcher {
 
+    @BindView(R.id.activity_album_tag_layout)
+    FrameLayout layout;
+
     @BindView(R.id.title)
     EditText albumTitle;
     @BindView(R.id.album_artist)
     EditText albumArtist;
-    @BindView(R.id.genre)
-    EditText genre;
+    @BindView(R.id.genres)
+    EditText genres;
     @BindView(R.id.year)
     EditText year;
 
@@ -72,7 +76,7 @@ public class AlbumTagEditorActivity extends AbsTagEditorActivity implements Text
         fillViewsWithFileTags();
         albumTitle.addTextChangedListener(this);
         albumArtist.addTextChangedListener(this);
-        genre.addTextChangedListener(this);
+        genres.addTextChangedListener(this);
         year.addTextChangedListener(this);
     }
 
@@ -80,7 +84,7 @@ public class AlbumTagEditorActivity extends AbsTagEditorActivity implements Text
     private void fillViewsWithFileTags() {
         albumTitle.setText(getAlbumTitle());
         albumArtist.setText(getAlbumArtistName());
-        genre.setText(getGenreName());
+        genres.setText(getGenreName());
         year.setText(getSongYear());
     }
 
@@ -96,7 +100,7 @@ public class AlbumTagEditorActivity extends AbsTagEditorActivity implements Text
         String albumTitleStr = albumTitle.getText().toString();
         String albumArtistNameStr = albumArtist.getText().toString();
         if (albumArtistNameStr.trim().equals("") || albumTitleStr.trim().equals("")) {
-            Toast.makeText(this, getResources().getString(R.string.album_or_artist_empty), Toast.LENGTH_SHORT).show();
+            snackbar(R.string.album_or_artist_empty);
             return;
         }
         lastFMRestClient.getApiService().getAlbumInfo(albumTitleStr, albumArtistNameStr, null).enqueue(new Callback<LastFmAlbum>() {
@@ -117,7 +121,7 @@ public class AlbumTagEditorActivity extends AbsTagEditorActivity implements Text
                                     public void onLoadFailed(Exception e, Drawable errorDrawable) {
                                         super.onLoadFailed(e, errorDrawable);
                                         e.printStackTrace();
-                                        Toast.makeText(AlbumTagEditorActivity.this, e.toString(), Toast.LENGTH_LONG).show();
+                                        snackbar(e.toString());
                                     }
 
                                     @Override
@@ -141,8 +145,7 @@ public class AlbumTagEditorActivity extends AbsTagEditorActivity implements Text
             }
 
             private void toastLoadingFailed() {
-                Toast.makeText(AlbumTagEditorActivity.this,
-                        R.string.could_not_download_album_cover, Toast.LENGTH_SHORT).show();
+                snackbar(R.string.could_not_download_album_cover);
             }
         });
     }
@@ -166,7 +169,7 @@ public class AlbumTagEditorActivity extends AbsTagEditorActivity implements Text
         //android seems not to recognize album_artist field so we additionally write the normal artist field
         fieldKeyValueMap.put(FieldKey.ARTIST, albumArtist.getText().toString());
         fieldKeyValueMap.put(FieldKey.ALBUM_ARTIST, albumArtist.getText().toString());
-        fieldKeyValueMap.put(FieldKey.GENRE, genre.getText().toString());
+        fieldKeyValueMap.put(FieldKey.GENRE, genres.getText().toString());
         fieldKeyValueMap.put(FieldKey.YEAR, year.getText().toString());
 
         writeValuesToFiles(fieldKeyValueMap, deleteAlbumArt ? new ArtworkInfo(getId(), null) : albumArtBitmap == null ? null : new ArtworkInfo(getId(), albumArtBitmap));
@@ -201,7 +204,7 @@ public class AlbumTagEditorActivity extends AbsTagEditorActivity implements Text
                     public void onLoadFailed(Exception e, Drawable errorDrawable) {
                         super.onLoadFailed(e, errorDrawable);
                         e.printStackTrace();
-                        Toast.makeText(AlbumTagEditorActivity.this, e.toString(), Toast.LENGTH_LONG).show();
+                        snackbar(e.toString());
                     }
 
                     @Override
@@ -235,5 +238,13 @@ public class AlbumTagEditorActivity extends AbsTagEditorActivity implements Text
     protected void setColors(int color) {
         super.setColors(color);
         albumTitle.setTextColor(ToolbarContentTintHelper.toolbarTitleColor(this, color));
+    }
+
+    private void snackbar(int msg) {
+        snackbar(getString(msg));
+    }
+
+    private void snackbar(String msg) {
+        Snackbar.make(layout, msg, Snackbar.LENGTH_LONG).show();
     }
 }

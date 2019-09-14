@@ -24,7 +24,7 @@ import com.peter1303.phonograph.loader.PlaylistLoader;
 import com.peter1303.phonograph.loader.SongLoader;
 import com.peter1303.phonograph.model.Album;
 import com.peter1303.phonograph.model.Artist;
-import com.peter1303.phonograph.model.Genre;
+import com.peter1303.phonograph.model.Genres;
 import com.peter1303.phonograph.model.Playlist;
 import com.peter1303.phonograph.model.Song;
 import com.peter1303.phonograph.model.lyrics.AbsSynchronizedLyrics;
@@ -102,8 +102,8 @@ public class MusicUtil {
     }
 
     @NonNull
-    public static String getGenreInfoString(@NonNull final Context context, @NonNull final Genre genre) {
-        int songCount = genre.songCount;
+    public static String getGenreInfoString(@NonNull final Context context, @NonNull final Genres genres) {
+        int songCount = genres.songCount;
         return MusicUtil.getSongCountString(context, songCount);
     }
 

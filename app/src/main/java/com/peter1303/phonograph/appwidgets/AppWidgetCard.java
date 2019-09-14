@@ -42,7 +42,7 @@ public class AppWidgetCard extends BaseAppWidget {
     }
 
     /**
-     * Initialize given widgets to default state, where we launch Music on
+     * Initialize given widgets to default state, where we launch Online on
      * default click and hide actions if service not running.
      */
     protected void defaultAppWidget(final Context context, final int[] appWidgetIds) {

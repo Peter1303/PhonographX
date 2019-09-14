@@ -18,12 +18,13 @@ import android.provider.MediaStore;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.peter1303.phonograph.R;
 import com.peter1303.phonograph.loader.SongLoader;
 import com.peter1303.phonograph.model.Song;
 import com.peter1303.phonograph.service.MusicService;
+import com.peter1303.phonograph.ui.activities.MainActivity;
+import com.peter1303.phonograph.util.AppUtil;
 import com.peter1303.phonograph.util.PreferenceUtil;
 
 import java.io.File;
@@ -307,7 +308,7 @@ public class MusicPlayerRemote {
                 queue.add(song);
                 openQueue(queue, 0, false);
             }
-            Toast.makeText(musicService, musicService.getResources().getString(R.string.added_title_to_playing_queue), Toast.LENGTH_SHORT).show();
+            AppUtil.sendMsg(musicService, musicService.getResources().getString(R.string.added_title_to_playing_queue));
             return true;
         }
         return false;
@@ -320,8 +321,8 @@ public class MusicPlayerRemote {
             } else {
                 openQueue(songs, 0, false);
             }
-            final String toast = songs.size() == 1 ? musicService.getResources().getString(R.string.added_title_to_playing_queue) : musicService.getResources().getString(R.string.added_x_titles_to_playing_queue, songs.size());
-            Toast.makeText(musicService, toast, Toast.LENGTH_SHORT).show();
+            final String msg = songs.size() == 1 ? musicService.getResources().getString(R.string.added_title_to_playing_queue) : musicService.getResources().getString(R.string.added_x_titles_to_playing_queue, songs.size());
+            AppUtil.sendMsg(musicService, msg);
             return true;
         }
         return false;
@@ -336,7 +337,7 @@ public class MusicPlayerRemote {
                 queue.add(song);
                 openQueue(queue, 0, false);
             }
-            Toast.makeText(musicService, musicService.getResources().getString(R.string.added_title_to_playing_queue), Toast.LENGTH_SHORT).show();
+            AppUtil.sendMsg(musicService, musicService.getResources().getString(R.string.added_title_to_playing_queue));
             return true;
         }
         return false;
@@ -349,8 +350,8 @@ public class MusicPlayerRemote {
             } else {
                 openQueue(songs, 0, false);
             }
-            final String toast = songs.size() == 1 ? musicService.getResources().getString(R.string.added_title_to_playing_queue) : musicService.getResources().getString(R.string.added_x_titles_to_playing_queue, songs.size());
-            Toast.makeText(musicService, toast, Toast.LENGTH_SHORT).show();
+            final String msg = songs.size() == 1 ? musicService.getResources().getString(R.string.added_title_to_playing_queue) : musicService.getResources().getString(R.string.added_x_titles_to_playing_queue, songs.size());
+            AppUtil.sendMsg(musicService, msg);
             return true;
         }
         return false;
@@ -471,6 +472,10 @@ public class MusicPlayerRemote {
     @TargetApi(Build.VERSION_CODES.KITKAT)
     private static String getSongIdFromMediaProvider(Uri uri) {
         return DocumentsContract.getDocumentId(uri).split(":")[1];
+    }
+
+    public static MusicService getMusicService() {
+        return musicService;
     }
 
     public static boolean isServiceConnected() {

@@ -1,0 +1,14 @@
+// thumb color
+        int thumbColor = ThemeStore.accentColor(context);
+        // trackColor
+        int trackColor = 0xfff1f1f1;
+        // set the thumb color
+        DrawableCompat.setTintList(switchCompat.getThumbDrawable(), new ColorStateList(
+                new int[][]{
+                        new int[]{android.R.attr.state_checked},
+                        new int[]{}
+                },
+                new int[]{
+                        thumbColor,
+                        trackColor
+                }));

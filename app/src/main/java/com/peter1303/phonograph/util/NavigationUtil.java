@@ -8,15 +8,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.util.Pair;
-import android.widget.Toast;
 
 import com.peter1303.phonograph.R;
 import com.peter1303.phonograph.helper.MusicPlayerRemote;
-import com.peter1303.phonograph.model.Genre;
+import com.peter1303.phonograph.model.Genres;
 import com.peter1303.phonograph.model.Playlist;
 import com.peter1303.phonograph.ui.activities.AlbumDetailActivity;
 import com.peter1303.phonograph.ui.activities.ArtistDetailActivity;
-import com.peter1303.phonograph.ui.activities.GenreDetailActivity;
+import com.peter1303.phonograph.ui.activities.EqualizerActivity;
+import com.peter1303.phonograph.ui.activities.GenresDetailActivity;
 import com.peter1303.phonograph.ui.activities.PlaylistDetailActivity;
 
 /**
@@ -48,9 +48,9 @@ public class NavigationUtil {
         }
     }
 
-    public static void goToGenre(@NonNull final Activity activity, final Genre genre, @Nullable Pair... sharedElements) {
-        final Intent intent = new Intent(activity, GenreDetailActivity.class);
-        intent.putExtra(GenreDetailActivity.EXTRA_GENRE, genre);
+    public static void goToGenre(@NonNull final Activity activity, final Genres genres, @Nullable Pair... sharedElements) {
+        final Intent intent = new Intent(activity, GenresDetailActivity.class);
+        intent.putExtra(GenresDetailActivity.EXTRA_GENRE, genres);
 
         activity.startActivity(intent);
     }
@@ -58,22 +58,26 @@ public class NavigationUtil {
     public static void goToPlaylist(@NonNull final Activity activity, final Playlist playlist, @Nullable Pair... sharedElements) {
         final Intent intent = new Intent(activity, PlaylistDetailActivity.class);
         intent.putExtra(PlaylistDetailActivity.EXTRA_PLAYLIST, playlist);
-
         activity.startActivity(intent);
     }
 
     public static void openEqualizer(@NonNull final Activity activity) {
         final int sessionId = MusicPlayerRemote.getAudioSessionId();
         if (sessionId == AudioEffect.ERROR_BAD_VALUE) {
-            Toast.makeText(activity, activity.getResources().getString(R.string.no_audio_ID), Toast.LENGTH_LONG).show();
+            AppUtil.sendMsg(activity, R.string.no_audio_ID);
         } else {
-            try {
-                final Intent effects = new Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL);
-                effects.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId);
-                effects.putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC);
-                activity.startActivityForResult(effects, 0);
-            } catch (@NonNull final ActivityNotFoundException notFound) {
-                Toast.makeText(activity, activity.getResources().getString(R.string.no_equalizer), Toast.LENGTH_SHORT).show();
+            SPUtil sp = new SPUtil(activity);
+            if (sp.getBoolean("equalizer_default", false)) {
+                try {
+                    final Intent effects = new Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL);
+                    effects.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId);
+                    effects.putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC);
+                    activity.startActivityForResult(effects, 0);
+                } catch (@NonNull final ActivityNotFoundException notFound) {
+                    AppUtil.sendMsg(activity, R.string.no_equalizer);
+                }
+            } else {
+                activity.startActivity(new Intent(activity, EqualizerActivity.class));
             }
         }
     }

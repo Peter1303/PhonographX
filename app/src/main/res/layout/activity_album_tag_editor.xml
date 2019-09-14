@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:focusable="true"
+    android:id="@+id/activity_album_tag_layout"
     android:focusableInTouchMode="true">
 
     <com.github.ksoichiro.android.observablescrollview.ObservableScrollView
@@ -99,13 +100,13 @@
                     android:layout_height="wrap_content">
 
                     <EditText
-                        android:id="@+id/genre"
+                        android:id="@+id/genres"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:fontFamily="sans-serif"
                         android:gravity="center_vertical"
-                        android:hint="@string/genre"
+                        android:hint="@string/genres"
                         android:inputType="text|textCapWords"
                         android:singleLine="true"
                         android:textAppearance="@style/TextAppearance.AppCompat.Title" />

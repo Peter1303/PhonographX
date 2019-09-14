@@ -95,7 +95,7 @@
         </activity>
         <activity android:name="com.peter1303.phonograph.ui.activities.AlbumDetailActivity" />
         <activity android:name="com.peter1303.phonograph.ui.activities.ArtistDetailActivity" />
-        <activity android:name="com.peter1303.phonograph.ui.activities.GenreDetailActivity" />
+        <activity android:name="com.peter1303.phonograph.ui.activities.GenresDetailActivity" />
         <activity android:name="com.peter1303.phonograph.ui.activities.PlaylistDetailActivity" />
         <activity
             android:name="com.peter1303.phonograph.ui.activities.tageditor.SongTagEditorActivity"
@@ -121,7 +121,18 @@
             android:name="com.peter1303.phonograph.appshortcuts.AppShortcutLauncherActivity"
             android:launchMode="singleInstance"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-        <activity android:name="com.peter1303.phonograph.ui.activities.PurchaseActivity" />
+        <activity
+            android:name="com.peter1303.phonograph.ui.activities.PurchaseActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="pdev.top"
+                    android:scheme="phonograph" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".ui.activities.EqualizerActivity" />
 
         <service
             android:name="com.peter1303.phonograph.service.MusicService"

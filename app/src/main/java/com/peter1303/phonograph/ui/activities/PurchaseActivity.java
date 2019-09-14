@@ -2,6 +2,8 @@ package com.peter1303.phonograph.ui.activities;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
@@ -23,6 +25,7 @@ import com.peter1303.phonograph.util.PurchaseUtil;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -69,6 +72,17 @@ public class PurchaseActivity extends AbsBaseActivity {
             }
         });
         purchaseButton.setOnClickListener(v -> openUrl(PAY_URL + App.ANDROID_ID));
+
+        Intent intent = getIntent();
+        if (null != intent && null != intent.getData()) {
+            Uri uri = intent.getData();
+            if (Objects.requireNonNull(uri.getHost()).equals("pdev.top")) {
+                String act = uri.getQueryParameter("action");
+                if (Objects.requireNonNull(act).equals("verify")) {
+                    restorePurchase();
+                }
+            }
+        }
     }
 
     private void restorePurchase() {
