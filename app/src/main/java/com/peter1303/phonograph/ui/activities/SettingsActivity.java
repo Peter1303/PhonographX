@@ -1,13 +1,11 @@
 package com.peter1303.phonograph.ui.activities;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.media.audiofx.AudioEffect;
 import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.ColorInt;
@@ -28,8 +26,10 @@ import android.widget.LinearLayout;
 import com.afollestad.materialdialogs.color.ColorChooserDialog;
 import com.google.android.material.snackbar.Snackbar;
 import com.kabouzeid.appthemehelper.ThemeStore;
+import com.kabouzeid.appthemehelper.common.prefs.supportv7.ATECheckBoxPreference;
 import com.kabouzeid.appthemehelper.common.prefs.supportv7.ATEColorPreference;
 import com.kabouzeid.appthemehelper.common.prefs.supportv7.ATEPreferenceFragmentCompat;
+import com.kabouzeid.appthemehelper.common.prefs.supportv7.ATESwitchPreference;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
 import com.peter1303.phonograph.App;
 import com.peter1303.phonograph.R;
@@ -40,12 +40,11 @@ import com.peter1303.phonograph.preferences.BlacklistPreferenceDialog;
 import com.peter1303.phonograph.preferences.LibraryPreference;
 import com.peter1303.phonograph.preferences.LibraryPreferenceDialog;
 import com.peter1303.phonograph.ui.activities.base.AbsBaseActivity;
-import com.peter1303.phonograph.util.AppUtil;
 import com.peter1303.phonograph.util.NavigationUtil;
 import com.peter1303.phonograph.util.PreferenceUtil;
 import com.peter1303.phonograph.util.PurchaseUtil;
+import com.peter1303.phonograph.util.SPUtil;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 import butterknife.BindView;
@@ -77,7 +76,7 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
 
         toolbar.setBackgroundColor(ThemeStore.primaryColor(this));
         setSupportActionBar(toolbar);
-        //noinspection ConstantConditions
+        //no inspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         if (savedInstanceState == null) {
@@ -96,29 +95,11 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
     public void onColorSelection(@NonNull ColorChooserDialog dialog, @ColorInt int selectedColor) {
         switch (dialog.getTitle()) {
             case R.string.primary_color:
-                if (!new PurchaseUtil(context).isProVersion()) {
-                    Arrays.sort(NonProAllowedColors.PRIMARY_COLORS);
-                    if (Arrays.binarySearch(NonProAllowedColors.PRIMARY_COLORS, selectedColor) < 0) {
-                        // color wasn't found
-                        snackbar(R.string.only_the_first_5_colors_available);
-                        startActivity(new Intent(this, PurchaseActivity.class));
-                        return;
-                    }
-                }
                 ThemeStore.editTheme(this)
                         .primaryColor(selectedColor)
                         .commit();
                 break;
             case R.string.accent_color:
-                if (!new PurchaseUtil(context).isProVersion()) {
-                    Arrays.sort(NonProAllowedColors.ACCENT_COLORS);
-                    if (Arrays.binarySearch(NonProAllowedColors.ACCENT_COLORS, selectedColor) < 0) {
-                        // color wasn't found
-                        snackbar(R.string.only_the_first_5_colors_available);
-                        startActivity(new Intent(this, PurchaseActivity.class));
-                        return;
-                    }
-                }
                 ThemeStore.editTheme(this)
                         .accentColor(selectedColor)
                         .commit();
@@ -201,6 +182,12 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
             if (preference == findPreference("id")) {
                 clipboard(Objects.requireNonNull(getContext()), App.ANDROID_ID);
                 snackbar(R.string.snackbar_copied_id);
+            } else if (preference.equals("online_album")) {
+                //new SPUtil(context).save("online_album", false);
+                if (!new PurchaseUtil(context).isProVersion()) {
+                    startActivity(new Intent(context, PurchaseActivity.class));
+                    ((ATESwitchPreference) preference).setChecked(false);
+                }
             }
             return super.onPreferenceTreeClick(preference);
         }
@@ -225,11 +212,6 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
             setSummary(generalTheme);
             generalTheme.setOnPreferenceChangeListener((preference, o) -> {
                 String themeName = (String) o;
-                if (themeName.equals("black") && !new PurchaseUtil(Objects.requireNonNull(getContext())).isProVersion()) {
-                    snackbar(R.string.black_theme_is_a_pro_feature);
-                    startActivity(new Intent(getContext(), PurchaseActivity.class));
-                    return false;
-                }
 
                 setSummary(generalTheme, o);
 
@@ -333,22 +315,16 @@ public class SettingsActivity extends AbsBaseActivity implements ColorChooserDia
             }
 
             final Preference equalizer = findPreference("equalizer");
-            if (!hasEqualizer()) {
-                equalizer.setEnabled(false);
-            }
             equalizer.setOnPreferenceClickListener(preference -> {
                 NavigationUtil.openEqualizer(getActivity());
                 return true;
             });
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+                findPreference("equalizer_default").setEnabled(false);
+            }
         }
 
-        private boolean hasEqualizer() {
-            final Intent effects = new Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL);
-            PackageManager pm = Objects.requireNonNull(getActivity()).getPackageManager();
-            ResolveInfo ri = pm.resolveActivity(effects, 0);
-            return ri != null;
-        }
-
+        @SuppressLint("ApplySharedPref")
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             if (PreferenceUtil.CLASSIC_NOTIFICATION.equals(key)) {

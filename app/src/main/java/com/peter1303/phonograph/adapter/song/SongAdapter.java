@@ -145,15 +145,16 @@ public class SongAdapter extends AbsMultiSelectAdapter<SongAdapter.ViewHolder, S
 
                     @Override
                     public void onColorReady(int color) {
-                        if (usePalette)
+                        if (usePalette) {
                             setColors(color, holder);
-                        else
+                        } else {
                             setColors(getDefaultFooterColor(), holder);
+                        }
                     }
                 });
     }
 
-    protected String getSongTitle(Song song) {
+    private String getSongTitle(Song song) {
         return song.title;
     }
 

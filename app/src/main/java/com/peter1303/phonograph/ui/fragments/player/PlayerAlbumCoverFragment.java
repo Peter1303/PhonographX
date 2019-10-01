@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.viewpager.widget.ViewPager;
+
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -51,6 +52,8 @@ public class PlayerAlbumCoverFragment extends AbsMusicServiceFragment implements
     TextView lyricsLine1;
     @BindView(R.id.player_lyrics_line2)
     TextView lyricsLine2;
+
+    public static ImageView albumCover = null;
 
     private Callbacks callbacks;
     private int currentPosition;
@@ -131,6 +134,7 @@ public class PlayerAlbumCoverFragment extends AbsMusicServiceFragment implements
         if (position != MusicPlayerRemote.getPosition()) {
             MusicPlayerRemote.playSongAt(position);
         }
+        albumCover = ((AlbumCoverPagerAdapter) viewPager.getAdapter()).getAlbumCover();
     }
 
     private AlbumCoverPagerAdapter.AlbumCoverFragment.ColorReceiver colorReceiver = new AlbumCoverPagerAdapter.AlbumCoverFragment.ColorReceiver() {
@@ -148,14 +152,12 @@ public class PlayerAlbumCoverFragment extends AbsMusicServiceFragment implements
 
     public void showHeartAnimation() {
         favoriteIcon.clearAnimation();
-
         favoriteIcon.setAlpha(0f);
         favoriteIcon.setScaleX(0f);
         favoriteIcon.setScaleY(0f);
         favoriteIcon.setVisibility(View.VISIBLE);
         favoriteIcon.setPivotX(favoriteIcon.getWidth() / 2);
         favoriteIcon.setPivotY(favoriteIcon.getHeight() / 2);
-
         favoriteIcon.animate()
                 .setDuration(ViewUtil.PHONOGRAPH_ANIM_TIME / 2)
                 .setInterpolator(new DecelerateInterpolator())
@@ -228,7 +230,7 @@ public class PlayerAlbumCoverFragment extends AbsMusicServiceFragment implements
             hideLyricsLayout();
             return;
         }
-
+        // TODO 歌词
         if (!(lyrics instanceof AbsSynchronizedLyrics)) return;
         AbsSynchronizedLyrics synchronizedLyrics = (AbsSynchronizedLyrics) lyrics;
 

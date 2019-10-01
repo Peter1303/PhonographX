@@ -115,7 +115,7 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
         setUpDrawerLayout();
 
         if (savedInstanceState == null) {
-            setMusicChooser(PreferenceUtil.getInstance(this).getLastMusicChooser());
+            setMusicChooser(LIBRARY);
         } else {
             restoreCurrentFragment();
         }
@@ -131,12 +131,6 @@ public class MainActivity extends AbsSlidingMusicPanelActivity {
     }
 
     private void setMusicChooser(int key) {
-        if (!new PurchaseUtil(context).isProVersion() && key == FOLDERS) {
-            Snackbar.make(drawerLayout, R.string.folder_view_is_a_pro_feature, Snackbar.LENGTH_LONG).show();
-            startActivityForResult(new Intent(this, PurchaseActivity.class), PURCHASE_REQUEST);
-            key = LIBRARY;
-        }
-
         PreferenceUtil.getInstance(this).setLastMusicChooser(key);
         switch (key) {
             case LIBRARY:

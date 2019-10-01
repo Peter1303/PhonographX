@@ -11,6 +11,7 @@ import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.view.MenuItemCompat;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -22,8 +23,8 @@ import com.peter1303.phonograph.adapter.online.OnlineAdapter;
 import com.peter1303.phonograph.adapter.online.ShuffleButtonOnlineSongAdapter;
 import com.peter1303.phonograph.interfaces.LoaderIds;
 import com.peter1303.phonograph.misc.WrappedAsyncTaskLoader;
-import com.peter1303.phonograph.model.Online;
-import com.peter1303.phonograph.model.OnlineInfo;
+import com.peter1303.phonograph.model.online.Online;
+import com.peter1303.phonograph.model.online.OnlineInfo;
 import com.peter1303.phonograph.ui.activities.MainActivity;
 import com.peter1303.phonograph.ui.activities.base.AbsBaseActivity;
 import com.peter1303.phonograph.util.ApiUtils;
@@ -48,8 +49,6 @@ public class OnlineFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFra
     }
     */
     private static final int LOADER_ID = LoaderIds.ONLINE_FRAGMENT;
-
-    private static final String SEARCH_API = "https://pdev.top/phonograph/api/music.php";
 
     private static final String QUERY = "query";
 
@@ -195,10 +194,10 @@ public class OnlineFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFra
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         final MenuItem searchItem = menu.findItem(R.id.action_input_search);
-        searchView = (SearchView) searchItem.getActionView();
+        searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         searchView.setQueryHint(getString(R.string.search_hint));
         searchView.setMaxWidth(Integer.MAX_VALUE);
-        searchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+        MenuItemCompat.setOnActionExpandListener(searchItem, new MenuItemCompat.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
                 return true;
@@ -266,7 +265,7 @@ public class OnlineFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFra
                     list.put(ApiUtils.FILTER, ApiUtils.NAME);
                     list.put(ApiUtils.TYPE, ApiUtils.NETEASE);
                     list.put(ApiUtils.PAGE, String.valueOf(page));
-                    String result = AbsBaseActivity.post(SEARCH_API, list);
+                    String result = AbsBaseActivity.post(ApiUtils.SEARCH_API, list);
                     //Log.i("png", result);
                     Gson gson = new Gson();
                     Online music = gson.fromJson(result, Online.class);

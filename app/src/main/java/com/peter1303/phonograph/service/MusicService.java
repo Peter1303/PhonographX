@@ -186,18 +186,20 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
 
     private Handler uiThreadHandler;
 
-    private BassBoost mBass;
-    private Equalizer mEqualizer;
+    // 均衡器
+    private BassBoost bass;
+    private Equalizer equalizer;
     private AcousticEchoCanceler canceler;
     private AutomaticGainControl control;
     private NoiseSuppressor suppressor;
     private LoudnessEnhancer loudnessEnhancer;
-    private Virtualizer mVirtualizer;
+    private Virtualizer virtualizer;
 
     private static String getTrackUri(@NonNull Song song) {
         return MusicUtil.getSongFileUri(song.id).toString();
     }
 
+    // 创建
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onCreate() {
@@ -388,12 +390,12 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
         sendBroadcast(new Intent("com.kabouzeid.gramophone.PHONOGRAPH_MUSIC_SERVICE_DESTROYED"));
 
         try {
-            mEqualizer.release();
-            mVirtualizer.release();
+            equalizer.release();
+            virtualizer.release();
             canceler.release();
             control.release();
             suppressor.release();
-            mBass.release();
+            bass.release();
             loudnessEnhancer.release();
         } catch (Exception e) {
             Log.e("Phonograph", e.toString());
@@ -402,28 +404,26 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
 
     //以下为音效部分
     private void initialAudioEffect(final int audioSessionId) {
-        new Thread(() -> {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    loudnessEnhancer = new LoudnessEnhancer(audioSessionId);
-                }
-                mBass = new BassBoost(0, audioSessionId);
-                mVirtualizer = new Virtualizer(0, audioSessionId);
-                mEqualizer = new Equalizer(0, audioSessionId);
-                canceler = AcousticEchoCanceler.create(audioSessionId);
-                control = AutomaticGainControl.create(audioSessionId);
-                suppressor = NoiseSuppressor.create(audioSessionId);
-                getPreference();
-            } catch (Exception e) {
-                Log.e("Phonograph", e.toString());
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                loudnessEnhancer = new LoudnessEnhancer(audioSessionId);
             }
-        }).start();
+            bass = new BassBoost(0, audioSessionId);
+            virtualizer = new Virtualizer(0, audioSessionId);
+            equalizer = new Equalizer(0, audioSessionId);
+            canceler = AcousticEchoCanceler.create(audioSessionId);
+            control = AutomaticGainControl.create(audioSessionId);
+            suppressor = NoiseSuppressor.create(audioSessionId);
+            getPreference();
+        } catch (Exception e) {
+            Log.e("Phonograph", e.toString());
+        }
     }
 
     public void setEqualizer(boolean b) {
         try {
-            mEqualizer.setEnabled(b);
-            Log.v("开启", "mEqualizer: " + mEqualizer.getEnabled());
+            equalizer.setEnabled(b);
+            Log.v("开启", "equalizer: " + equalizer.getEnabled());
         } catch (Exception e) {
             Log.e("Phonograph", e.toString());
         }
@@ -432,12 +432,16 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
 
     public void setEqualizerBandLevel(Short band, Short level) {
         try {
-            mEqualizer.setBandLevel(band, level);
-            Log.v("开启", "mEqualizerLevel: " + mEqualizer.getEnabled());
+            equalizer.setBandLevel(band, level);
+            Log.v("开启", "equalizerLevel: " + equalizer.getEnabled());
             Log.v("开启", "level: " + level.toString());
         } catch (Exception e) {
             Log.e("Phonograph", e.toString());
         }
+    }
+
+    public Equalizer getEqualizer() {
+        return equalizer;
     }
 
     public void setCanceler(boolean b) {
@@ -470,9 +474,9 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
 
     public void setBass(boolean b) {
         try {
-            mBass.setEnabled(b);
-            Log.v("开启", "bass: " + mBass.getEnabled());
-            loudnessEnhancer.setEnabled(mBass.getEnabled() || mVirtualizer.getEnabled());
+            bass.setEnabled(b);
+            Log.v("开启", "bass: " + bass.getEnabled());
+            loudnessEnhancer.setEnabled(bass.getEnabled() || virtualizer.getEnabled());
         } catch (Exception e) {
             Log.e("Phonograph", e.toString());
         }
@@ -480,7 +484,7 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
 
     public void setBassStrength(Short strength) {
         try {
-            mBass.setStrength(strength);
+            bass.setStrength(strength);
             Log.v("开启", "setBassStrength: " + strength.toString());
         } catch (Exception e) {
             Log.e("Phonograph", e.toString());
@@ -489,9 +493,9 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
 
     public void setVirtualizer(Boolean b) {
         try {
-            mVirtualizer.setEnabled(b);
-            Log.v("开启", "virtualizer: " + mVirtualizer.getEnabled());
-            loudnessEnhancer.setEnabled(mVirtualizer.getEnabled() || mBass.getEnabled());
+            virtualizer.setEnabled(b);
+            Log.v("开启", "virtualizer: " + virtualizer.getEnabled());
+            loudnessEnhancer.setEnabled(virtualizer.getEnabled() || bass.getEnabled());
             Log.v("开启", "增强" + loudnessEnhancer.getEnabled());
         } catch (Exception e) {
             Log.e("Phonograph", e.toString());
@@ -500,7 +504,7 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
 
     public void setVirtualizerStrength(Short s) {
         try {
-            mVirtualizer.setStrength(s);
+            virtualizer.setStrength(s);
             Log.v("开启", "setVirtualizerStrength: " + s.toString());
         } catch (Exception e) {
             Log.e("Phonograph", e.toString());
@@ -542,97 +546,102 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
             }
             //均衡器
             if (sp.getBoolean("Equalizer", false)) {
-                mEqualizer.setEnabled(true);
+                equalizer.setEnabled(true);
                 Log.v("开启", "Equalizer");
                 switch (sp.getInt("Spinner", 0)) {
                     case 0:
-                        mEqualizer.setBandLevel((short) 0, (short) 300);
-                        mEqualizer.setBandLevel((short) 1, (short) 0);
-                        mEqualizer.setBandLevel((short) 2, (short) 0);
-                        mEqualizer.setBandLevel((short) 3, (short) 0);
-                        mEqualizer.setBandLevel((short) 4, (short) 300);
+                        equalizer.setBandLevel((short) 0, (short) 300);
+                        equalizer.setBandLevel((short) 1, (short) 0);
+                        equalizer.setBandLevel((short) 2, (short) 0);
+                        equalizer.setBandLevel((short) 3, (short) 0);
+                        equalizer.setBandLevel((short) 4, (short) 300);
                         return;
                     case 1:
-                        mEqualizer.setBandLevel((short) 0, (short) 500);
-                        mEqualizer.setBandLevel((short) 1, (short) 300);
-                        mEqualizer.setBandLevel((short) 2, (short) -200);
-                        mEqualizer.setBandLevel((short) 3, (short) 400);
-                        mEqualizer.setBandLevel((short) 4, (short) 400);
+                        equalizer.setBandLevel((short) 0, (short) 500);
+                        equalizer.setBandLevel((short) 1, (short) 300);
+                        equalizer.setBandLevel((short) 2, (short) -200);
+                        equalizer.setBandLevel((short) 3, (short) 400);
+                        equalizer.setBandLevel((short) 4, (short) 400);
                         return;
                     case 2:
-                        mEqualizer.setBandLevel((short) 0, (short) 600);
-                        mEqualizer.setBandLevel((short) 1, (short) 0);
-                        mEqualizer.setBandLevel((short) 2, (short) 200);
-                        mEqualizer.setBandLevel((short) 3, (short) 400);
-                        mEqualizer.setBandLevel((short) 4, (short) 100);
+                        equalizer.setBandLevel((short) 0, (short) 600);
+                        equalizer.setBandLevel((short) 1, (short) 0);
+                        equalizer.setBandLevel((short) 2, (short) 200);
+                        equalizer.setBandLevel((short) 3, (short) 400);
+                        equalizer.setBandLevel((short) 4, (short) 100);
                         return;
                     case 3:
-                        mEqualizer.setBandLevel((short) 0, (short) 0);
-                        mEqualizer.setBandLevel((short) 1, (short) 0);
-                        mEqualizer.setBandLevel((short) 2, (short) 0);
-                        mEqualizer.setBandLevel((short) 3, (short) 0);
-                        mEqualizer.setBandLevel((short) 4, (short) 0);
+                        equalizer.setBandLevel((short) 0, (short) 0);
+                        equalizer.setBandLevel((short) 1, (short) 0);
+                        equalizer.setBandLevel((short) 2, (short) 0);
+                        equalizer.setBandLevel((short) 3, (short) 0);
+                        equalizer.setBandLevel((short) 4, (short) 0);
                         return;
                     case 4:
-                        mEqualizer.setBandLevel((short) 0, (short) 300);
-                        mEqualizer.setBandLevel((short) 1, (short) 0);
-                        mEqualizer.setBandLevel((short) 2, (short) 0);
-                        mEqualizer.setBandLevel((short) 3, (short) 200);
-                        mEqualizer.setBandLevel((short) 4, (short) -100);
+                        equalizer.setBandLevel((short) 0, (short) 300);
+                        equalizer.setBandLevel((short) 1, (short) 0);
+                        equalizer.setBandLevel((short) 2, (short) 0);
+                        equalizer.setBandLevel((short) 3, (short) 200);
+                        equalizer.setBandLevel((short) 4, (short) -100);
                         return;
                     case 5:
-                        mEqualizer.setBandLevel((short) 0, (short) 400);
-                        mEqualizer.setBandLevel((short) 1, (short) 100);
-                        mEqualizer.setBandLevel((short) 2, (short) 700);
-                        mEqualizer.setBandLevel((short) 3, (short) 100);
-                        mEqualizer.setBandLevel((short) 4, (short) 0);
+                        equalizer.setBandLevel((short) 0, (short) 400);
+                        equalizer.setBandLevel((short) 1, (short) 100);
+                        equalizer.setBandLevel((short) 2, (short) 700);
+                        equalizer.setBandLevel((short) 3, (short) 100);
+                        equalizer.setBandLevel((short) 4, (short) 0);
                         return;
                     case 6:
-                        mEqualizer.setBandLevel((short) 0, (short) 500);
-                        mEqualizer.setBandLevel((short) 1, (short) 300);
-                        mEqualizer.setBandLevel((short) 2, (short) 0);
-                        mEqualizer.setBandLevel((short) 3, (short) 100);
-                        mEqualizer.setBandLevel((short) 4, (short) 300);
+                        equalizer.setBandLevel((short) 0, (short) 500);
+                        equalizer.setBandLevel((short) 1, (short) 300);
+                        equalizer.setBandLevel((short) 2, (short) 0);
+                        equalizer.setBandLevel((short) 3, (short) 100);
+                        equalizer.setBandLevel((short) 4, (short) 300);
                         return;
                     case 7:
-                        mEqualizer.setBandLevel((short) 0, (short) 400);
-                        mEqualizer.setBandLevel((short) 1, (short) 200);
-                        mEqualizer.setBandLevel((short) 2, (short) -200);
-                        mEqualizer.setBandLevel((short) 3, (short) 200);
-                        mEqualizer.setBandLevel((short) 4, (short) 500);
+                        equalizer.setBandLevel((short) 0, (short) 400);
+                        equalizer.setBandLevel((short) 1, (short) 200);
+                        equalizer.setBandLevel((short) 2, (short) -200);
+                        equalizer.setBandLevel((short) 3, (short) 200);
+                        equalizer.setBandLevel((short) 4, (short) 500);
                         return;
                     case 8:
-                        mEqualizer.setBandLevel((short) 0, (short) -100);
-                        mEqualizer.setBandLevel((short) 1, (short) 200);
-                        mEqualizer.setBandLevel((short) 2, (short) 500);
-                        mEqualizer.setBandLevel((short) 3, (short) 100);
-                        mEqualizer.setBandLevel((short) 4, (short) -200);
+                        equalizer.setBandLevel((short) 0, (short) -100);
+                        equalizer.setBandLevel((short) 1, (short) 200);
+                        equalizer.setBandLevel((short) 2, (short) 500);
+                        equalizer.setBandLevel((short) 3, (short) 100);
+                        equalizer.setBandLevel((short) 4, (short) -200);
                         return;
                     case 9:
-                        mEqualizer.setBandLevel((short) 0, (short) 500);
-                        mEqualizer.setBandLevel((short) 1, (short) 300);
-                        mEqualizer.setBandLevel((short) 2, (short) -100);
-                        mEqualizer.setBandLevel((short) 3, (short) 300);
-                        mEqualizer.setBandLevel((short) 4, (short) 500);
+                        equalizer.setBandLevel((short) 0, (short) 500);
+                        equalizer.setBandLevel((short) 1, (short) 300);
+                        equalizer.setBandLevel((short) 2, (short) -100);
+                        equalizer.setBandLevel((short) 3, (short) 300);
+                        equalizer.setBandLevel((short) 4, (short) 500);
                         return;
                     case 10:
-                        mEqualizer.setBandLevel((short) 0, (short) 0);
-                        mEqualizer.setBandLevel((short) 1, (short) 800);
-                        mEqualizer.setBandLevel((short) 2, (short) 400);
-                        mEqualizer.setBandLevel((short) 3, (short) 100);
-                        mEqualizer.setBandLevel((short) 4, (short) 1000);
+                        equalizer.setBandLevel((short) 0, (short) 0);
+                        equalizer.setBandLevel((short) 1, (short) 800);
+                        equalizer.setBandLevel((short) 2, (short) 400);
+                        equalizer.setBandLevel((short) 3, (short) 100);
+                        equalizer.setBandLevel((short) 4, (short) 1000);
                         return;
                     case 11:
-                        mEqualizer.setBandLevel((short) 0, (short) -170);
-                        mEqualizer.setBandLevel((short) 1, (short) 270);
-                        mEqualizer.setBandLevel((short) 2, (short) 50);
-                        mEqualizer.setBandLevel((short) 3, (short) -220);
-                        mEqualizer.setBandLevel((short) 4, (short) 200);
+                        equalizer.setBandLevel((short) 0, (short) -170);
+                        equalizer.setBandLevel((short) 1, (short) 270);
+                        equalizer.setBandLevel((short) 2, (short) 50);
+                        equalizer.setBandLevel((short) 3, (short) -220);
+                        equalizer.setBandLevel((short) 4, (short) 200);
+                        return;
+                    case 12:
+                        for (int i = 0; i < 5; i ++) {
+                            equalizer.setBandLevel((short) i, (short) sp.getInt("level_" + i, 0));
+                        }
                         return;
                     default:
                 }
             } else {
-                mEqualizer.setEnabled(false);
+                equalizer.setEnabled(false);
             }
             //次要
             if (AcousticEchoCanceler.isAvailable()) {
@@ -735,7 +744,6 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
     private void quit() {
         pause();
         playingNotification.stop();
-
         closeAudioEffectSession();
         getAudioManager().abandonAudioFocus(audioFocusListener);
         stopSelf();
@@ -869,6 +877,7 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
 
         if (PreferenceUtil.getInstance(this).albumArtOnLockscreen()) {
             final Point screenSize = Util.getScreenSize(MusicService.this);
+            // TODO 完善本地加载
             final BitmapRequestBuilder<?, Bitmap> request = SongGlideRequest.Builder.from(Glide.with(MusicService.this), song)
                     .checkIgnoreMediaStore(MusicService.this)
                     .asBitmap().build();
@@ -1129,7 +1138,10 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
                         playSongAt(getPosition());
                     } else {
                         playback.start();
-                        initialAudioEffect(playback.getAudioSessionId());
+                        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP) {
+                            initialAudioEffect(getAudioSessionId());
+                        }
+                        Log.i("getAudioSessionId", "getAudioSessionId:" + getAudioSessionId());
                         if (!becomingNoisyReceiverRegistered) {
                             registerReceiver(becomingNoisyReceiver, becomingNoisyReceiverIntentFilter);
                             becomingNoisyReceiverRegistered = true;
@@ -1139,7 +1151,6 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
                             notHandledMetaChangedForCurrentTrack = false;
                         }
                         notifyChange(PLAY_STATE_CHANGED);
-
                         // fixes a bug where the volume would stay ducked because the AudioManager.AUDIOFOCUS_GAIN event is not sent
                         playerHandler.removeMessages(DUCK);
                         playerHandler.sendEmptyMessage(UNDUCK);
@@ -1298,7 +1309,7 @@ public class MusicService extends Service implements SharedPreferences.OnSharedP
         sendChangeInternal(what);
     }
 
-    // to let other apps know whats playing. i.E. last.fm (scrobbling) or musixmatch
+    // to let other apps know whats playing. i.E. last.fm (scrobbling) or musicmatch
     private void sendPublicIntent(@NonNull final String what) {
         final Intent intent = new Intent(what.replace(PHONOGRAPH_PACKAGE_NAME, MUSIC_PACKAGE_NAME));
 

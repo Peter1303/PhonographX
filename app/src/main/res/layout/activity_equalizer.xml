@@ -128,7 +128,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/activity_equalizer_summary_bass" />
 
-                        <SeekBar
+                        <androidx.appcompat.widget.AppCompatSeekBar
                             android:id="@+id/activity_equalizer_bass_seekbar"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -147,7 +147,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/activity_equalizer_summary_virtualizer" />
 
-                        <SeekBar
+                        <androidx.appcompat.widget.AppCompatSeekBar
                             android:id="@+id/activity_equalizer_virtualizer_seekbar"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"

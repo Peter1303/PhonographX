@@ -1,8 +1,9 @@
 package com.peter1303.phonograph.appshortcuts;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.peter1303.phonograph.appshortcuts.shortcuttype.LastAddedShortcutType;
 import com.peter1303.phonograph.appshortcuts.shortcuttype.ShuffleAllShortcutType;
@@ -17,7 +18,7 @@ import com.peter1303.phonograph.service.MusicService;
  * @author Adrian Campos
  */
 
-public class AppShortcutLauncherActivity extends Activity {
+public class AppShortcutLauncherActivity extends AppCompatActivity {
     public static final String KEY_SHORTCUT_TYPE = "com.kabouzeid.gramophone.appshortcuts.ShortcutType";
 
     public static final int SHORTCUT_TYPE_SHUFFLE_ALL = 0;

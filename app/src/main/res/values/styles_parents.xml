@@ -3,7 +3,7 @@
 
     <style name="Theme.Phonograph.Base" parent="Theme.AppCompat.NoActionBar">
 
-        <item name="android:windowActionBarOverlay">true</item>
+        <item name="windowActionBarOverlay">true</item>
         <item name="windowActionBarOverlay">true</item>
 
         <item name="md_dark_theme">true</item>
@@ -25,14 +25,14 @@
         <item name="colorAccent">@android:color/white</item>
 
         <!-- necessary to find the overflow button later in the layout-->
-        <item name="android:actionOverflowButtonStyle">@style/Widget.ActionButton.Overflow</item>
+        <item name="actionOverflowButtonStyle">@style/Widget.ActionButton.Overflow</item>
 
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
     <style name="Theme.Phonograph.Base.Light" parent="Theme.AppCompat.Light.NoActionBar">
 
-        <item name="android:windowActionBarOverlay">true</item>
+        <item name="windowActionBarOverlay">true</item>
         <item name="windowActionBarOverlay">true</item>
 
         <item name="md_dark_theme">false</item>
@@ -54,7 +54,7 @@
         <item name="colorAccent">@android:color/black</item>
 
         <!-- necessary to find the overflow button later in the layout-->
-        <item name="android:actionOverflowButtonStyle">@style/Widget.ActionButton.Overflow</item>
+        <item name="actionOverflowButtonStyle">@style/Widget.ActionButton.Overflow</item>
 
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
     </style>

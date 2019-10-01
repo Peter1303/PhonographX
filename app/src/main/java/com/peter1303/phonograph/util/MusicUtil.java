@@ -16,7 +16,6 @@ import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.peter1303.phonograph.R;
 import com.peter1303.phonograph.helper.MusicPlayerRemote;
@@ -65,7 +64,7 @@ public class MusicUtil {
         } catch (IllegalArgumentException e) {
             // TODO the path is most likely not like /storage/emulated/0/... but something like /storage/28C7-75B0/...
             e.printStackTrace();
-            Toast.makeText(context, "Could not share this file, I'm aware of the issue.", Toast.LENGTH_SHORT).show();
+            AppUtil.sendMsg(context, "Could not share this file, I'm aware of the issue.");
             return new Intent();
         }
     }
@@ -275,7 +274,7 @@ public class MusicUtil {
                 cursor.close();
             }
             context.getContentResolver().notifyChange(Uri.parse("content://media"), null);
-            Toast.makeText(context, context.getString(R.string.deleted_x_songs, songs.size()), Toast.LENGTH_SHORT).show();
+            AppUtil.sendMsg(context, context.getString(R.string.deleted_x_songs, songs.size()));
         } catch (SecurityException ignored) {
         }
     }

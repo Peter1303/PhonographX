@@ -131,6 +131,8 @@
 
     <string name="dialog_sleeper_min">分</string>
 
+    <string name="snackbar_save_album_failed">无法保存封面图片</string>
+
     <!--SettingsActivity-->
     <string name="pref_header_colors">颜色</string>
     <string name="pref_header_now_playing_screen">正在播放界面</string>
@@ -142,6 +144,7 @@
     <string name="pref_header_playlists">歌单</string>
     <string name="pref_header_notification">通知</string>
     <string name="pref_header_id">设备ID</string>
+
     <string name="pref_title_navigation_bar">着色导航栏</string>
     <string name="pref_title_app_shortcuts">着色应用快捷方式</string>
     <string name="pref_title_album_art_on_lockscreen">显示专辑封面</string>
@@ -149,6 +152,8 @@
     <string name="pref_title_blurred_album_art">专辑封面模糊化</string>
     <string name="pref_title_colored_notification">启用通知背景着色</string>
     <string name="pref_title_classic_notification">经典通知样式</string>
+    <string name="pref_title_album_quality">无损保存专辑封面</string>
+    <string name="pref_title_album_online">在线专辑封面</string>
     <string name="pref_title_ignore_media_store_artwork">忽略媒体储存中的专辑封面</string>
     <string name="pref_title_gapless_playback">无缝播放</string>
     <string name="pref_title_audio_ducking">音频焦点丢失时降低音量</string>
@@ -188,6 +193,8 @@
     <string name="pref_summary_colored_notification">使用与专辑封面相匹配的颜色着色通知背景色</string>
     <string name="pref_summary_gapless_playback">在某些设备上会造成播放问题</string>
     <string name="pref_summary_ignore_media_store_artwork">可以提高专辑封面图片的质量但加载时间也会更长仅当遇到专辑封面像素过低时建议开启</string>
+    <string name="pref_summary_album_quality">自动下载封面时保存高清封面</string>
+    <string name="pref_summary_album_online">使用在线专辑封面</string>
     <string name="pref_summary_colored_navigation_bar">用主色调着色导航栏</string>
     <string name="pref_summary_colored_app_shortcuts">用主色调着色应用快捷方式</string>
     <string name="pref_summary_audio_ducking">通知、导航等</string>
@@ -225,7 +232,7 @@
     <string name="could_not_restore_purchase">无法恢复购买状态</string>
     <string name="restored_previous_purchase_please_restart">尽情享受吧</string>
     <string name="buy_pro_title">点唱机X高级功能</string>
-    <string name="pro_tip">解锁额外的功能，如文件夹视图，所有主题颜色，黑色主题和睡眠计时器\n\nPhonographX 的源代码可以在 GitHub 上找得到，您可以免费自行编译\n但是，如果您想接收更新的话，请考虑激活点唱机X的高级功能\n\n非常感谢您的支持，\nPeter\n\n顺便支持一下原作者 Karim</string>
+    <string name="pro_tip">解锁「在线」的所有功能\n\nPhonographX 的源代码可以在 GitHub 上找得到，您可以免费自行编译\n但是，如果您想接收更新的话，请考虑激活点唱机X的高级功能\n\n非常感谢您的支持，\nPeter\n\n顺便支持一下原作者 Karim</string>
 
     <string name="purchase">购买</string>
     <string name="restore">恢复</string>
@@ -274,32 +281,20 @@
     <string name="app_widget_small_name">点唱机X - 小尺寸</string>
     <string name="app_widget_card_name">点唱机X - 卡片</string>
 
+    <!--BugReportActivity-->
     <string name="report_an_issue">报告问题</string>
     <string name="bug_report_issue">问题</string>
-    <string name="login">登录</string>
     <string name="title">标题</string>
     <string name="description">说明</string>
     <string name="device_info">设备信息</string>
-    <string name="bug_report_use_account">通过 Github 帐号发送</string>
-    <string name="bug_report_manual">手动发送</string>
-    <string name="username">用户名</string>
-    <string name="password">密码</string>
 
     <string name="bug_report_no_title">请输入问题的标题</string>
     <string name="bug_report_no_description">请输入问题的说明</string>
-    <string name="bug_report_no_username">请输入您在 Github 上的有效用户名</string>
-    <string name="bug_report_no_password">请输入您在 Github 上的有效密码</string>
-    <string name="bug_report_uploading">正在将报告上传至 Github...</string>
-    <string name="bug_report_failed">无法发送报告</string>
-    <string name="bug_report_failed_wrong_credentials">错误的用户名或密码</string>
-    <string name="bug_report_failed_invalid_token">无效的访问令牌请联系应用开发者</string>
-    <string name="bug_report_failed_issues_not_available">所选的资源库中未启用错误报告请联系应用开发者</string>
-    <string name="bug_report_failed_unknown">发生了一个意外错误请联系应用开发者</string>
+    <string name="bug_report_uploading">正在将报告上传</string>
+    <string name="bug_report_failed">无法发送报告</string>>
+    <string name="bug_report_failed_unknown">发生了一个意外错误</string>
 
     <string name="copied_device_info_to_clipboard">设备信息已复制到剪贴板</string>
-
-    <string name="your_account_data_is_only_used_for_authentication">您的帐号信息仅用于身份认证</string>
-    <string name="you_will_be_forwarded_to_the_issue_tracker_website">将带您跳转至报告问题的网站</string>
 
     <string name="app_shortcut_shuffle_all_short">随机播放</string>
     <string name="app_shortcut_top_tracks_short">最喜欢的歌曲</string>
@@ -308,11 +303,6 @@
 
     <string name="playing_notification_description">正在播放通知提供了播放/暂停等便捷操作</string>
     <string name="playing_notification_name">正在播放通知</string>
-
-    <string name="only_the_first_5_colors_available">免费版仅能使用前 5 个主题色</string>
-    <string name="black_theme_is_a_pro_feature">黑色主题属于高级版功能</string>
-    <string name="sleep_timer_is_a_pro_feature">睡眠计时器属于高级版功能</string>
-    <string name="folder_view_is_a_pro_feature">文件夹属于高级版功能</string>
 
     <string name="eugene_cheung_summary">他对源代码的贡献</string>
     <string name="adrian_summary">以新增专辑封面设计</string>
@@ -366,6 +356,7 @@
     <string name="snackbar_not_support_acoustic_echo_canceler">您的手机不支持回声消除</string>
     <string name="snackbar_not_support_automatic_gain_control">您的手机不支持自动增强</string>
     <string name="snackbar_not_support_noise_suppressor">您的手机不支持智能降噪</string>
+    <string name="snackbar_please_play_music_first">请先播放音乐以初始化均衡器</string>
 
     <string name="activity_equalizer_title_general">通用</string>
     <string name="activity_equalizer_title_base">基本音效</string>

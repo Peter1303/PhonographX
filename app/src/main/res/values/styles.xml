@@ -16,7 +16,7 @@
         <item name="android:layout_width">48dp</item>
         <item name="android:layout_height">48dp</item>
         <item name="android:scaleType">center</item>
-        <item name="android:background">?attr/roundSelector</item>
+        <item name="background">?attr/roundSelector</item>
         <item name="android:focusableInTouchMode">false</item>
         <item name="android:focusable">false</item>
     </style>
@@ -30,10 +30,10 @@
     <style name="Toolbar">
         <item name="titleMarginStart">16dp</item>
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">?android:attr/actionBarSize</item>
-        <item name="android:theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+        <item name="android:layout_height">?attr/actionBarSize</item>
+        <item name="theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
         <item name="popupTheme">?toolbarPopupTheme</item>
-        <item name="android:elevation" tools:ignore="NewApi">@dimen/toolbar_elevation</item>
+        <item name="elevation" tools:ignore="NewApi">@dimen/toolbar_elevation</item>
         <item name="android:transitionName" tools:ignore="NewApi">toolbar</item>
     </style>
 

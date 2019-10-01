@@ -21,7 +21,10 @@ import com.peter1303.phonograph.helper.MusicPlayerRemote;
 import com.peter1303.phonograph.helper.MusicProgressViewUpdateHelper;
 import com.peter1303.phonograph.helper.PlayPauseButtonOnClickHandler;
 import com.peter1303.phonograph.ui.fragments.AbsMusicServiceFragment;
+import com.peter1303.phonograph.util.AppUtil;
 import com.peter1303.phonograph.views.PlayPauseDrawable;
+
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -87,6 +90,7 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
 
     private void updateSongTitle() {
         miniPlayerTitle.setText(MusicPlayerRemote.getCurrentSong().title);
+        AppUtil.changed(Objects.requireNonNull(getContext()));
     }
 
     @Override
@@ -127,7 +131,7 @@ public class MiniPlayerFragment extends AbsMusicServiceFragment implements Music
 
         GestureDetector flingPlayBackController;
 
-        public FlingPlayBackController(Context context) {
+        FlingPlayBackController(Context context) {
             flingPlayBackController = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
                 @Override
                 public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {

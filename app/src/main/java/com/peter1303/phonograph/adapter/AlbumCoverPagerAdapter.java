@@ -12,11 +12,16 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.peter1303.phonograph.R;
+import com.peter1303.phonograph.glide.LocalAlbumGlideRequest;
 import com.peter1303.phonograph.glide.PhonographColoredTarget;
 import com.peter1303.phonograph.glide.SongGlideRequest;
 import com.peter1303.phonograph.misc.CustomFragmentStatePagerAdapter;
 import com.peter1303.phonograph.model.Song;
+import com.peter1303.phonograph.ui.fragments.player.PlayerAlbumCoverFragment;
+import com.peter1303.phonograph.util.AppUtil;
+import com.peter1303.phonograph.util.FileUtil;
 import com.peter1303.phonograph.util.PreferenceUtil;
+import com.peter1303.phonograph.util.SPUtil;
 
 import java.util.List;
 
@@ -33,6 +38,8 @@ public class AlbumCoverPagerAdapter extends CustomFragmentStatePagerAdapter {
 
     private AlbumCoverFragment.ColorReceiver currentColorReceiver;
     private int currentColorReceiverPosition = -1;
+
+    private ImageView this_albumCover;
 
     public AlbumCoverPagerAdapter(FragmentManager fm, List<Song> dataSet) {
         super(fm);
@@ -68,10 +75,15 @@ public class AlbumCoverPagerAdapter extends CustomFragmentStatePagerAdapter {
             currentColorReceiver = null;
             currentColorReceiverPosition = -1;
             fragment.receiveColor(colorReceiver, position);
+            this_albumCover = fragment.getAlbumCover();
         } else {
             currentColorReceiver = colorReceiver;
             currentColorReceiverPosition = position;
         }
+    }
+
+    public ImageView getAlbumCover() {
+        return this_albumCover;
     }
 
     public static class AlbumCoverFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -88,7 +100,7 @@ public class AlbumCoverPagerAdapter extends CustomFragmentStatePagerAdapter {
         private ColorReceiver colorReceiver;
         private int request;
 
-        public static AlbumCoverFragment newInstance(final Song song) {
+        static AlbumCoverFragment newInstance(final Song song) {
             AlbumCoverFragment frag = new AlbumCoverFragment();
             final Bundle args = new Bundle();
             args.putParcelable(SONG_ARG, song);
@@ -127,16 +139,38 @@ public class AlbumCoverPagerAdapter extends CustomFragmentStatePagerAdapter {
             colorReceiver = null;
         }
 
+        public ImageView getAlbumCover() {
+            return albumCover;
+        }
+
         private void loadAlbumCover() {
-            SongGlideRequest.Builder.from(Glide.with(getActivity()), song)
-                    .checkIgnoreMediaStore(getActivity())
-                    .generatePalette(getActivity()).build()
-                    .into(new PhonographColoredTarget(albumCover) {
-                        @Override
-                        public void onColorReady(int color) {
-                            setColor(color);
-                        }
-                    });
+            // TODO 完善本地加载
+            if (new SPUtil(getContext()).getBoolean("online_album", false) &&
+                    FileUtil.albumExists(getContext(), AppUtil.getName())) {
+                LocalAlbumGlideRequest.Builder.from(getContext(), Glide.with(getActivity()))
+                        .generatePalette(getActivity()).build()
+                        .into(new PhonographColoredTarget(albumCover) {
+                            @Override
+                            public void onColorReady(int color) {
+                                setColor(color);
+                            }
+                        });
+                /*
+                Glide.with(getContext())
+                        .load(FileUtil.getAlbumCover(getContext(), AppUtil.getName()))
+                        .into(albumCover);
+                */
+            } else {
+                SongGlideRequest.Builder.from(Glide.with(getActivity()), song)
+                        .checkIgnoreMediaStore(getActivity())
+                        .generatePalette(getActivity()).build()
+                        .into(new PhonographColoredTarget(albumCover) {
+                            @Override
+                            public void onColorReady(int color) {
+                                setColor(color);
+                            }
+                        });
+            }
         }
 
         @Override

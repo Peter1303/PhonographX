@@ -15,15 +15,16 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.util.Log;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.peter1303.phonograph.R;
 import com.peter1303.phonograph.loader.SongLoader;
 import com.peter1303.phonograph.model.Song;
 import com.peter1303.phonograph.service.MusicService;
-import com.peter1303.phonograph.ui.activities.MainActivity;
 import com.peter1303.phonograph.util.AppUtil;
 import com.peter1303.phonograph.util.PreferenceUtil;
 
@@ -49,7 +50,7 @@ public class MusicPlayerRemote {
                                              final ServiceConnection callback) {
         Activity realActivity = ((Activity) context).getParent();
         if (realActivity == null) {
-            realActivity = (Activity) context;
+            realActivity = (AppCompatActivity) context;
         }
 
         final ContextWrapper contextWrapper = new ContextWrapper(realActivity);

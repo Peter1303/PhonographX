@@ -2,13 +2,12 @@ package com.peter1303.phonograph.ui.activities;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.res.ColorStateList;
-import android.graphics.PorterDuff;
 import android.media.audiofx.AcousticEchoCanceler;
 import android.media.audiofx.AutomaticGainControl;
 import android.media.audiofx.Equalizer;
 import android.media.audiofx.NoiseSuppressor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -18,20 +17,23 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.core.graphics.drawable.DrawableCompat;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.kabouzeid.appthemehelper.ThemeStore;
-import com.kabouzeid.appthemehelper.color.MaterialColor;
+import com.kabouzeid.appthemehelper.util.TintHelper;
 import com.peter1303.phonograph.R;
 import com.peter1303.phonograph.helper.MusicPlayerRemote;
 import com.peter1303.phonograph.service.MusicService;
 import com.peter1303.phonograph.ui.activities.base.AbsBaseActivity;
+import com.peter1303.phonograph.util.AnimationUtils;
 import com.peter1303.phonograph.util.SPUtil;
+
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -65,9 +67,9 @@ public class EqualizerActivity extends AbsBaseActivity {
     SwitchCompat switchCompat_noise_suppressor;
 
     @BindView(R.id.activity_equalizer_bass_seekbar)
-    SeekBar seekBar_bass;
+    AppCompatSeekBar seekBar_bass;
     @BindView(R.id.activity_equalizer_virtualizer_seekbar)
-    SeekBar seekBar_virtualizer;
+    AppCompatSeekBar seekBar_virtualizer;
 
     @BindView(R.id.activity_equalizer_spinner)
     AppCompatSpinner spinner;
@@ -75,13 +77,15 @@ public class EqualizerActivity extends AbsBaseActivity {
     @BindView(R.id.activity_equalizer_seekbar_layout)
     LinearLayout seekBar_layout;
 
-    private SeekBar[] seekBars;
-
-    private Equalizer mEqualizer;
+    private AppCompatSeekBar[] seekBars;
 
     private MusicService playService;
 
     private SPUtil sp;
+
+    private Equalizer equalizer;
+
+    private int accentColor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,21 +106,21 @@ public class EqualizerActivity extends AbsBaseActivity {
     }
 
     private void initViews() {
-        int thumbColor = ThemeStore.accentColor(context);
-        int trackColor = 0xfff1f1f1;
-        DrawableCompat.setTintList(switchCompat_switch.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
-        DrawableCompat.setTintList(switchCompat_bass_boost.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
-        DrawableCompat.setTintList(switchCompat_virtualizer.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
-        DrawableCompat.setTintList(switchCompat_acoustic_echo_canceler.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
-        DrawableCompat.setTintList(switchCompat_automatic_gain_control.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
-        DrawableCompat.setTintList(switchCompat_noise_suppressor.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
-        //LayerDrawable layerDrawable = (LayerDrawable) seekBar_bass.getProgressDrawable();
-        //Drawable drawable =layerDrawable.getDrawable(2);
-        //drawable.setColorFilter(trackColor, PorterDuff.Mode.SRC);
-        seekBar_bass.getThumb().setColorFilter(thumbColor, PorterDuff.Mode.SRC_ATOP);
-        seekBar_bass.invalidate();
-        seekBar_virtualizer.getThumb().setColorFilter(thumbColor, PorterDuff.Mode.SRC_ATOP);
-        seekBar_virtualizer.invalidate();
+        accentColor = ThemeStore.accentColor(this);
+        //final int primaryColor = ThemeStore.primaryColor(this);
+        title_general.setTextColor(accentColor);
+        title_base.setTextColor(accentColor);
+        title_special.setTextColor(accentColor);
+
+        TintHelper.setTintAuto(switchCompat_switch, accentColor, false);
+        TintHelper.setTintAuto(switchCompat_bass_boost, accentColor, false);
+        TintHelper.setTintAuto(switchCompat_virtualizer, accentColor, false);
+        TintHelper.setTintAuto(switchCompat_acoustic_echo_canceler, accentColor, false);
+        TintHelper.setTintAuto(switchCompat_automatic_gain_control, accentColor, false);
+        TintHelper.setTintAuto(switchCompat_noise_suppressor, accentColor, false);
+
+        TintHelper.setTintAuto(seekBar_bass, accentColor, false);
+        TintHelper.setTintAuto(seekBar_virtualizer, accentColor, false);
     }
 
     private void setUpToolbar() {
@@ -124,6 +128,7 @@ public class EqualizerActivity extends AbsBaseActivity {
         setSupportActionBar(toolbar);
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        toolbar.setNavigationOnClickListener(view -> finish());
         getSupportActionBar().setTitle(getString(R.string.equalizer));
     }
 
@@ -133,27 +138,25 @@ public class EqualizerActivity extends AbsBaseActivity {
         seekBar_bass.setMax(1000);
         seekBar_virtualizer.setMax(1000);
         //均衡器
-        try {
-            mEqualizer = new Equalizer(0, playService.getAudioSessionId());
-            seekBars = new SeekBar[5];
-            switchCompat_switch.setOnCheckedChangeListener((compoundButton, isChecked) -> {
-                seekBar_layout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-                spinner.setEnabled(isChecked);
-                playService.setEqualizer(isChecked);
-                sp.save("Equalizer", isChecked);
-            });
+        equalizer = MusicPlayerRemote.getMusicService().getEqualizer();
+        if (equalizer == null) {
+            snackbar(R.string.snackbar_please_play_music_first);
+            switchCompat_switch.setEnabled(false);
+            spinner.setEnabled(false);
+        } else {
+            seekBars = new AppCompatSeekBar[5];
             // 获取均衡控制器支持最小值和最大值
-            final short minEQLevel = mEqualizer.getBandLevelRange()[0];//第一个下标为最低的限度范围
-            final short maxEQLevel = mEqualizer.getBandLevelRange()[1];  // 第二个下标为最高的限度范围
+            final short minEQLevel = equalizer.getBandLevelRange()[0];//第一个下标为最低的限度范围
+            final short maxEQLevel = equalizer.getBandLevelRange()[1];  // 第二个下标为最高的限度范围
             // 获取均衡控制器支持的所有频率
-            short brands = mEqualizer.getNumberOfBands();
+            short brands = equalizer.getNumberOfBands();
             for (short i = 0; i < brands; i++) {
                 TextView eqTextView = new TextView(this);
                 // 创建一个TextView，用于显示频率
                 eqTextView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 eqTextView.setGravity(Gravity.CENTER_HORIZONTAL);
                 // 设置该均衡控制器的频率
-                eqTextView.setText((mEqualizer.getCenterFreq(i) / 1000) + " Hz");
+                eqTextView.setText((equalizer.getCenterFreq(i) / 1000) + " Hz");
                 seekBar_layout.addView(eqTextView);
                 // 创建一个水平排列组件的LinearLayout
                 LinearLayout tmpLayout = new LinearLayout(this);
@@ -170,16 +173,20 @@ public class EqualizerActivity extends AbsBaseActivity {
                 maxDbTextView.setText((maxEQLevel / 100) + " dB");
                 LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 layoutParams.weight = 1;
-                SeekBar bar = new SeekBar(this);
+                AppCompatSeekBar bar = new AppCompatSeekBar(this);
+                TintHelper.setTintAuto(bar, accentColor, false);
                 seekBars[i] = bar;
                 bar.setLayoutParams(layoutParams);
                 bar.setMax(maxEQLevel - minEQLevel);
+                bar.setProgress(sp.getInt("level_" + i, minEQLevel));
                 final short band = i;
                 // 为SeekBar的拖动事件设置事件监听器
                 bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                         Log.v("均衡器改变", "是");
+                        sp.save("level_" + band, progress);
                         if (fromUser) {
                             spinner.setSelection(12);
                         }
@@ -201,9 +208,19 @@ public class EqualizerActivity extends AbsBaseActivity {
                 tmpLayout.addView(maxDbTextView);
                 // 将水平排列组件的 LinearLayout 添加到 myLayout 容器中
                 seekBar_layout.addView(tmpLayout);
+                seekBar_layout.setVisibility(View.GONE);
+                switchCompat_switch.setOnCheckedChangeListener((compoundButton, isChecked) -> {
+                    spinner.setEnabled(isChecked);
+                    playService.setEqualizer(isChecked);
+                    sp.save("Equalizer", isChecked);
+                    if (isChecked) {
+                        seekBar_layout.setVisibility(View.VISIBLE);
+                        AnimationUtils.visibleAnimator(seekBar_layout);
+                    } else {
+                        AnimationUtils.invisibleAnimator(seekBar_layout);
+                    }
+                });
             }
-        } catch (Exception e) {
-            Log.e("Phonograph", e.toString());
         }
         //音场
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -396,14 +413,11 @@ public class EqualizerActivity extends AbsBaseActivity {
 
     private void getPreference(){
         //均衡器
-        if (!sp.getBoolean("Equalizer", false)) {
-            seekBar_layout.setVisibility(View.GONE);
-        } else {
+        if (equalizer != null) {
+            new Handler().postDelayed(() -> switchCompat_switch.setChecked(sp.getBoolean("Equalizer", false)), 450);
+            spinner.setEnabled(sp.getBoolean("Equalizer", false));
             spinner.setSelection(sp.getInt("Spinner", 0));
-            seekBar_layout.setVisibility(View.VISIBLE);
         }
-        switchCompat_switch.setChecked(sp.getBoolean("Equalizer", false));
-        spinner.setEnabled(sp.getBoolean("Equalizer", false));
         //低音增强
         switchCompat_bass_boost.setChecked(sp.getBoolean("Bass", false));
         seekBar_bass.setProgress(sp.getInt("Bass_seekBar", 0));
@@ -414,6 +428,9 @@ public class EqualizerActivity extends AbsBaseActivity {
         switchCompat_acoustic_echo_canceler.setChecked(sp.getBoolean("Canceler", false));
         switchCompat_automatic_gain_control.setChecked(sp.getBoolean("AutoGain", false));
         switchCompat_noise_suppressor.setChecked(sp.getBoolean("Suppressor", false));
+
+        seekBar_bass.setEnabled(sp.getBoolean("Bass", false));
+        seekBar_virtualizer.setEnabled(sp.getBoolean("Virtualizer", false));
     }
 
     @Override

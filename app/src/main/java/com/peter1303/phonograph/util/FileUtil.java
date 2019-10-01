@@ -2,9 +2,12 @@ package com.peter1303.phonograph.util;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.provider.MediaStore;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import com.peter1303.phonograph.loader.SongLoader;
@@ -15,6 +18,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -197,6 +202,138 @@ public final class FileUtil {
         } catch (IOException e) {
             e.printStackTrace();
             return file.getAbsoluteFile();
+        }
+    }
+
+    public static boolean string2File(String content, String name, String suffix, String path) {
+        String new_path = path + name + (suffix.isEmpty() ? "" : "." + suffix);
+        try {
+            Log.i("Phonograph", "write File:" + new_path);
+            FileWriter fw = new FileWriter(new_path);
+            fw.flush();
+            fw.write(content);
+            fw.close();
+            return true;
+        } catch (Exception e) {
+            Log.e("Phonograph", "Error on write File:" + e);
+            return false;
+        }
+    }
+
+    /**
+     * 得到 App 的 files 目录
+     * @param context
+     * @return
+     */
+    public static File getAppStorageDir(Context context) {
+        File file = new File(context.getExternalFilesDir(null) + File.separator);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        return file;
+    }
+
+    /**
+     * 获取封面目录
+     * @param context
+     * @return
+     */
+    public static String getAlbumCoverDir(Context context) {
+        File file = new File(getAppStorageDir(context).toString() + "/album/");
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        boolean b = new File(file.toString() + "/.nomeadia").exists();
+        if (!b) {
+            string2File("", ".nomeadia", "", file.toString() + "/");
+        }
+        Log.i("Phonograph", "getAlbumCoverDir -> nomeadia: " + b);
+        return file.toString();
+    }
+
+    /**
+     * 检测封面图片是否存在
+     * @param context
+     * @param name
+     * @return
+     */
+    public static boolean albumExists(Context context, String name) {
+        return new File(getAlbumCoverDir(context) + "/" + name + ".png").exists();
+    }
+
+    /**
+     * 获取本地的封面图片
+     * @param context
+     * @param name
+     * @return
+     */
+    public static File getAlbumCover(Context context, String name) {
+        return new File(getAlbumCoverDir(context) + "/" + name + ".png");
+    }
+
+    /*
+    public static boolean bitmap2File(Context context, Bitmap bitmap, String name) {
+        try {
+            File file = new File(getAlbumCoverDir(context) + name + ".png");
+            FileOutputStream fos = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.flush();
+            fos.close();
+            return new File(file.toString()).exists();
+        } catch (Exception e) {
+            Log.e("Phonograph", "bitmap2File: error -> " + e.toString());
+            return false;
+        }
+    }
+     */
+
+    /**
+     * 将缓冲的图片进行保存
+     * @param context
+     * @param o
+     * @param name
+     * @return
+     */
+    public static boolean album2File(Context context, File o, String name) {
+        try {
+            File file = new File(getAlbumCoverDir(context) + "/" + name + ".png");
+            copy(o, file);
+            return new File(file.toString()).exists();
+        } catch (Exception e) {
+            Log.e("Phonograph", "bitmap2File: error -> " + e.toString());
+            return false;
+        }
+    }
+
+    /**
+     * 复制文件
+     *
+     * @param source 输入文件
+     * @param target 输出文件
+     */
+    public static void copy(File source, File target) {
+        FileInputStream fileInputStream = null;
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileInputStream = new FileInputStream(source);
+            fileOutputStream = new FileOutputStream(target);
+            byte[] buffer = new byte[1024];
+            while (fileInputStream.read(buffer) > 0) {
+                fileOutputStream.write(buffer);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (fileInputStream != null) {
+                    fileInputStream.close();
+                }
+                if (fileOutputStream != null) {
+                    fileOutputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

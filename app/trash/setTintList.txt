@@ -1,14 +1,15 @@
-// thumb color
-        int thumbColor = ThemeStore.accentColor(context);
-        // trackColor
+int thumbColor = ThemeStore.accentColor(context);
         int trackColor = 0xfff1f1f1;
-        // set the thumb color
-        DrawableCompat.setTintList(switchCompat.getThumbDrawable(), new ColorStateList(
-                new int[][]{
-                        new int[]{android.R.attr.state_checked},
-                        new int[]{}
-                },
-                new int[]{
-                        thumbColor,
-                        trackColor
-                }));
+        DrawableCompat.setTintList(switchCompat_switch.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
+        DrawableCompat.setTintList(switchCompat_bass_boost.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
+        DrawableCompat.setTintList(switchCompat_virtualizer.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
+        DrawableCompat.setTintList(switchCompat_acoustic_echo_canceler.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
+        DrawableCompat.setTintList(switchCompat_automatic_gain_control.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
+        DrawableCompat.setTintList(switchCompat_noise_suppressor.getThumbDrawable(), new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}}, new int[]{thumbColor, trackColor}));
+        //LayerDrawable layerDrawable = (LayerDrawable) seekBar_bass.getProgressDrawable();
+        //Drawable drawable =layerDrawable.getDrawable(2);
+        //drawable.setColorFilter(trackColor, PorterDuff.Mode.SRC);
+        seekBar_bass.getThumb().setColorFilter(thumbColor, PorterDuff.Mode.SRC_ATOP);
+        seekBar_bass.invalidate();
+        seekBar_virtualizer.getThumb().setColorFilter(thumbColor, PorterDuff.Mode.SRC_ATOP);
+        seekBar_virtualizer.invalidate();

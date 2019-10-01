@@ -171,7 +171,6 @@ public class AlbumTagEditorActivity extends AbsTagEditorActivity implements Text
         fieldKeyValueMap.put(FieldKey.ALBUM_ARTIST, albumArtist.getText().toString());
         fieldKeyValueMap.put(FieldKey.GENRE, genres.getText().toString());
         fieldKeyValueMap.put(FieldKey.YEAR, year.getText().toString());
-
         writeValuesToFiles(fieldKeyValueMap, deleteAlbumArt ? new ArtworkInfo(getId(), null) : albumArtBitmap == null ? null : new ArtworkInfo(getId(), albumArtBitmap));
     }
 

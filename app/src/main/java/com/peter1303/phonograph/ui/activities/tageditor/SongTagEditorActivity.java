@@ -73,22 +73,18 @@ public class SongTagEditorActivity extends AbsTagEditorActivity implements TextW
 
     @Override
     protected void loadCurrentImage() {
-
     }
 
     @Override
     protected void getImageFromLastFM() {
-
     }
 
     @Override
     protected void searchImageOnWeb() {
-
     }
 
     @Override
     protected void deleteImage() {
-
     }
 
     @Override
@@ -119,17 +115,14 @@ public class SongTagEditorActivity extends AbsTagEditorActivity implements TextW
 
     @Override
     protected void loadImageFromFile(Uri imageFilePath) {
-
     }
 
     @Override
     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
     }
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
-
     }
 
     @Override

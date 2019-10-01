@@ -22,7 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:src="@drawable/default_album_art"
+                app:srcCompat="@drawable/default_album_art"
                 tools:ignore="ContentDescription" />
 
             <LinearLayout

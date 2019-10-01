@@ -6,7 +6,6 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.widget.Toast;
 
-
 import com.peter1303.phonograph.R;
 
 import java.lang.ref.WeakReference;

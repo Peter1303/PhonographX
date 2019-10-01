@@ -21,11 +21,9 @@ import com.peter1303.phonograph.adapter.base.AbsMultiSelectAdapter;
 import com.peter1303.phonograph.adapter.base.MediaEntryViewHolder;
 import com.peter1303.phonograph.glide.OnlineGlideRequest;
 import com.peter1303.phonograph.glide.PhonographColoredTarget;
-import com.peter1303.phonograph.helper.MusicPlayerRemote;
 import com.peter1303.phonograph.helper.menu.OnlineMenuHelper;
 import com.peter1303.phonograph.interfaces.CabHolder;
-import com.peter1303.phonograph.model.OnlineInfo;
-import com.peter1303.phonograph.ui.activities.base.AbsMusicServiceActivity;
+import com.peter1303.phonograph.model.online.OnlineInfo;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
 import java.util.List;
@@ -82,7 +80,7 @@ public class OnlineAdapter extends AbsMultiSelectAdapter<OnlineAdapter.ViewHolde
         }
     }
 
-    protected void loadAlbumCover(OnlineInfo song, final ViewHolder holder) {
+    private void loadAlbumCover(OnlineInfo song, final ViewHolder holder) {
         if (holder.image == null) return;
         OnlineGlideRequest.Builder.from(Glide.with(activity), song)
                 .generatePalette(activity).build()

@@ -3,25 +3,39 @@ package com.peter1303.phonograph.ui.activities.base;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.ColorInt;
 import androidx.annotation.FloatRange;
 import androidx.annotation.LayoutRes;
 import androidx.fragment.app.Fragment;
+
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.PathInterpolator;
+import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
 import com.peter1303.phonograph.R;
+import com.peter1303.phonograph.glide.PhonographColoredTarget;
+import com.peter1303.phonograph.glide.SongGlideRequest;
 import com.peter1303.phonograph.helper.MusicPlayerRemote;
 import com.peter1303.phonograph.ui.fragments.player.AbsPlayerFragment;
 import com.peter1303.phonograph.ui.fragments.player.MiniPlayerFragment;
 import com.peter1303.phonograph.ui.fragments.player.card.CardPlayerFragment;
-import com.peter1303.phonograph.util.PreferenceUtil;
+import com.peter1303.phonograph.util.AppUtil;
+import com.peter1303.phonograph.util.FileUtil;
+import com.peter1303.phonograph.util.SPUtil;
 import com.peter1303.phonograph.util.ViewUtil;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
+
+import java.io.File;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -33,6 +47,8 @@ import butterknife.ButterKnife;
  *         {@link #wrapSlidingMusicPanel(int)} first and then return it in {@link #createContentView()}
  */
 public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivity implements SlidingUpPanelLayout.PanelSlideListener, CardPlayerFragment.Callbacks {
+
+    public static String ACTION_CHANGED = "changed";
 
     @BindView(R.id.sliding_layout)
     SlidingUpPanelLayout slidingUpPanelLayout;
@@ -47,6 +63,11 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
     private ValueAnimator navigationBarColorAnimator;
     private ArgbEvaluator argbEvaluator = new ArgbEvaluator();
 
+    private Context context = this;
+
+    @BindView(R.id.mini_player_image)
+    ImageView imageView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,10 +81,8 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
 
         playerFragment = (AbsPlayerFragment) getSupportFragmentManager().findFragmentById(R.id.player_fragment_container);
         miniPlayerFragment = (MiniPlayerFragment) getSupportFragmentManager().findFragmentById(R.id.mini_player_fragment);
-
         //noinspection ConstantConditions
         miniPlayerFragment.getView().setOnClickListener(v -> expandPanel());
-
         slidingUpPanelLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -84,6 +103,10 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
             }
         });
         slidingUpPanelLayout.addPanelSlideListener(this);
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ACTION_CHANGED);
+        registerReceiver(mBroadcastReceive, intentFilter);
     }
 
     public void setAntiDragView(View antiDragView) {
@@ -104,12 +127,14 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
                 }
             });
         } // don't call hideBottomBar(true) here as it causes a bug with the SlidingUpPanelLayout
+        onChanged();
     }
 
     @Override
     public void onQueueChanged() {
         super.onQueueChanged();
         hideBottomBar(MusicPlayerRemote.getPlayingQueue().isEmpty());
+        onChanged();
     }
 
     @Override
@@ -255,6 +280,7 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
     protected void onDestroy() {
         super.onDestroy();
         if (navigationBarColorAnimator != null) navigationBarColorAnimator.cancel(); // just in case
+        unregisterReceiver(mBroadcastReceive);
     }
 
     @Override
@@ -269,6 +295,34 @@ public abstract class AbsSlidingMusicPanelActivity extends AbsMusicServiceActivi
     protected View getSnackBarContainer() {
         return findViewById(R.id.content_container);
     }
+
+    private void onChanged() {
+        // 更改图片
+        String name = AppUtil.getName();
+        Log.i("Phonograph", "onChanged -> name: " + name);
+        Log.i("Phonograph", "onChanged -> albumExists(" + FileUtil.albumExists(context, name) + "): " + FileUtil.getAlbumCover(context, name).toString());
+        if (new SPUtil(context).getBoolean("online_album", false) &&
+                FileUtil.albumExists(context, name)) {
+            // TODO 完善本地加载
+            Glide.with(this).load(FileUtil.getAlbumCover(context, name)).into(imageView);
+        } else {
+            SongGlideRequest.Builder.from(Glide.with(context), MusicPlayerRemote.getCurrentSong())
+                    .checkIgnoreMediaStore(context)
+                    .generatePalette(context).build()
+                    .into(new PhonographColoredTarget(imageView) {
+                        @Override
+                        public void onColorReady(int color) {
+                        }
+                    });
+        }
+    }
+
+    BroadcastReceiver mBroadcastReceive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            onChanged();
+        }
+    };
 
     /*
     public SlidingUpPanelLayout getSlidingUpPanelLayout() {

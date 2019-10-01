@@ -1,6 +1,8 @@
 package com.peter1303.phonograph.util;
 
 public class ApiUtils {
+    public static String SEARCH_API = "https://pdev.top/phonograph/api/music.php";
+
     public static String MODE = "mode";
 
     public static String PURCHASE = "purchase";

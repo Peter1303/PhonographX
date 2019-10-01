@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentActivity;
 
 import com.peter1303.phonograph.R;
-import com.peter1303.phonograph.model.OnlineInfo;
+import com.peter1303.phonograph.model.online.OnlineInfo;
 
 public class OnlineMenuHelper {
     public static final int MENU_RES = R.menu.menu_item_song;

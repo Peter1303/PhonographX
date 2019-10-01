@@ -6,10 +6,24 @@
 
         <com.kabouzeid.appthemehelper.common.prefs.supportv7.ATESwitchPreference
             app:iconSpaceReserved="false"
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="ignore_media_store_artwork"
             android:summary="@string/pref_summary_ignore_media_store_artwork"
             android:title="@string/pref_title_ignore_media_store_artwork" />
+
+        <com.kabouzeid.appthemehelper.common.prefs.supportv7.ATESwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="false"
+            android:key="online_album"
+            android:summary="@string/pref_summary_album_online"
+            android:title="@string/pref_title_album_online" />
+
+        <com.kabouzeid.appthemehelper.common.prefs.supportv7.ATESwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="false"
+            android:key="album_quality"
+            android:summary="@string/pref_summary_album_quality"
+            android:title="@string/pref_title_album_quality" />
 
         <com.kabouzeid.appthemehelper.common.prefs.supportv7.ATEListPreference
             app:iconSpaceReserved="false"

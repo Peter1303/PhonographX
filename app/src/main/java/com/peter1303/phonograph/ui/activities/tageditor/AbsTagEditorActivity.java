@@ -1,8 +1,6 @@
 package com.peter1303.phonograph.ui.activities.tageditor;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.Dialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -10,11 +8,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,13 +17,18 @@ import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.github.ksoichiro.android.observablescrollview.ObservableScrollView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.kabouzeid.appthemehelper.ThemeStore;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
 import com.kabouzeid.appthemehelper.util.TintHelper;
 import com.peter1303.phonograph.R;
-import com.peter1303.phonograph.misc.DialogAsyncTask;
 import com.peter1303.phonograph.misc.SimpleObservableScrollViewCallbacks;
 import com.peter1303.phonograph.misc.UpdateToastMediaScannerCompletionListener;
 import com.peter1303.phonograph.ui.activities.base.AbsBaseActivity;
@@ -68,6 +68,7 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
     public static final String EXTRA_PALETTE = "extra_palette";
     private static final String TAG = AbsTagEditorActivity.class.getSimpleName();
     private static final int REQUEST_CODE_SELECT_IMAGE = 1000;
+
     @BindView(R.id.play_pause_fab)
     FloatingActionButton fab;
     @BindView(R.id.observableScrollView)
@@ -78,10 +79,13 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
     ImageView image;
     @BindView(R.id.header)
     LinearLayout header;
+
     private int id;
     private int headerVariableSpace;
     private int paletteColorPrimary;
+
     private boolean isInNoImageMode;
+
     private final SimpleObservableScrollViewCallbacks observableScrollViewCallbacks = new SimpleObservableScrollViewCallbacks() {
         @Override
         public void onScrollChanged(int scrollY, boolean b, boolean b2) {
@@ -96,13 +100,18 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
             image.setTranslationY(scrollY / 2);
         }
     };
+
     private List<String> songPaths;
+
+    public static Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(getContentViewLayout());
         ButterKnife.bind(this);
+
+        context = this;
 
         getIntentExtras();
 
@@ -267,24 +276,22 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
 
     protected void writeValuesToFiles(@NonNull final Map<FieldKey, String> fieldKeyValueMap, @Nullable final ArtworkInfo artworkInfo) {
         Util.hideSoftKeyboard(this);
-
-        new WriteTagsAsyncTask(this).execute(new WriteTagsAsyncTask.LoadingInfo(getSongPaths(), fieldKeyValueMap, artworkInfo));
+        new WriteTagsAsyncTask().execute(new WriteTagsAsyncTask.LoadingInfo(getSongPaths(), fieldKeyValueMap, artworkInfo));
     }
 
-    private static class WriteTagsAsyncTask extends DialogAsyncTask<WriteTagsAsyncTask.LoadingInfo, Integer, String[]> {
-        @SuppressLint("StaticFieldLeak")
-        Context applicationContext;
+    @SuppressLint("StaticFieldLeak")
+    public static class WriteTagsAsyncTask extends AsyncTask<WriteTagsAsyncTask.LoadingInfo, Integer, String[]> {
 
-        WriteTagsAsyncTask(Context context) {
-            super(context);
-            applicationContext = context;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // TODO 提示保存更改 saving_changes
         }
 
         @Override
         protected String[] doInBackground(LoadingInfo... params) {
             try {
                 LoadingInfo info = params[0];
-
                 Artwork artwork = null;
                 File albumArtFile = null;
                 if (info.artworkInfo != null && info.artworkInfo.artwork != null) {
@@ -296,7 +303,6 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
                         e.printStackTrace();
                     }
                 }
-
                 int counter = 0;
                 boolean wroteArtwork = false;
                 boolean deletedArtwork = false;
@@ -305,7 +311,6 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
                     try {
                         AudioFile audioFile = AudioFileIO.read(new File(filePath));
                         Tag tag = audioFile.getTagOrCreateAndSetDefault();
-
                         if (info.fieldKeyValueMap != null) {
                             for (Map.Entry<FieldKey, String> entry : info.fieldKeyValueMap.entrySet()) {
                                 try {
@@ -315,7 +320,6 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
                                 }
                             }
                         }
-
                         if (info.artworkInfo != null) {
                             if (info.artworkInfo.artwork == null) {
                                 tag.deleteArtworkField();
@@ -326,22 +330,16 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
                                 wroteArtwork = true;
                             }
                         }
-
                         audioFile.commit();
                     } catch (@NonNull CannotReadException | IOException | CannotWriteException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
                         e.printStackTrace();
                     }
                 }
-
-                Context context = getContext();
-                if (context != null) {
-                    if (wroteArtwork) {
-                        MusicUtil.insertAlbumArt(context, info.artworkInfo.albumId, albumArtFile.getPath());
-                    } else if (deletedArtwork) {
-                        MusicUtil.deleteAlbumArt(context, info.artworkInfo.albumId);
-                    }
+                if (wroteArtwork) {
+                    MusicUtil.insertAlbumArt(context, info.artworkInfo.albumId, albumArtFile.getPath());
+                } else if (deletedArtwork) {
+                    MusicUtil.deleteAlbumArt(context, info.artworkInfo.albumId);
                 }
-
                 return info.filePaths.toArray(new String[info.filePaths.size()]);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -362,34 +360,17 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
         }
 
         private void scan(String[] toBeScanned) {
-            Context context = getContext();
-            MediaScannerConnection.scanFile(applicationContext, toBeScanned, null, context instanceof Activity ? new UpdateToastMediaScannerCompletionListener((Activity) context, toBeScanned) : null);
+            MediaScannerConnection.scanFile(context, toBeScanned, null, context instanceof AppCompatActivity ? new UpdateToastMediaScannerCompletionListener((AppCompatActivity) context, toBeScanned) : null);
         }
 
-        @Override
-        protected Dialog createDialog(@NonNull Context context) {
-            return new MaterialDialog.Builder(context)
-                    .title(R.string.saving_changes)
-                    .cancelable(false)
-                    .progress(false, 0)
-                    .build();
-        }
-
-        @Override
-        protected void onProgressUpdate(@NonNull Dialog dialog, Integer... values) {
-            super.onProgressUpdate(dialog, values);
-            ((MaterialDialog) dialog).setMaxProgress(values[1]);
-            ((MaterialDialog) dialog).setProgress(values[0]);
-        }
-
-        static class LoadingInfo {
+        public static class LoadingInfo {
             final Collection<String> filePaths;
             @Nullable
             final Map<FieldKey, String> fieldKeyValueMap;
             @Nullable
             private ArtworkInfo artworkInfo;
 
-            private LoadingInfo(Collection<String> filePaths, @Nullable Map<FieldKey, String> fieldKeyValueMap, @Nullable ArtworkInfo artworkInfo) {
+            public LoadingInfo(Collection<String> filePaths, @Nullable Map<FieldKey, String> fieldKeyValueMap, @Nullable ArtworkInfo artworkInfo) {
                 this.filePaths = filePaths;
                 this.fieldKeyValueMap = fieldKeyValueMap;
                 this.artworkInfo = artworkInfo;
@@ -401,7 +382,7 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
         public final int albumId;
         final Bitmap artwork;
 
-        ArtworkInfo(int albumId, Bitmap artwork) {
+        public ArtworkInfo(int albumId, Bitmap artwork) {
             this.albumId = albumId;
             this.artwork = artwork;
         }
@@ -427,7 +408,7 @@ public abstract class AbsTagEditorActivity extends AbsBaseActivity {
     protected abstract void loadImageFromFile(Uri selectedFile);
 
     @NonNull
-    private AudioFile getAudioFile(@NonNull String path) {
+    protected AudioFile getAudioFile(@NonNull String path) {
         try {
             return AudioFileIO.read(new File(path));
         } catch (Exception e) {

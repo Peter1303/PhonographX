@@ -2,8 +2,9 @@ package com.peter1303.phonograph.helper.menu;
 
 import android.content.Intent;
 import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentActivity;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
+
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;

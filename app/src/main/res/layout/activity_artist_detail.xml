@@ -23,7 +23,7 @@
         <ViewStub
             android:id="@+id/cab_stub"
             android:layout_width="match_parent"
-            android:layout_height="?android:attr/actionBarSize" />
+            android:layout_height="?attr/actionBarSize" />
 
     </FrameLayout>
 
@@ -174,7 +174,7 @@
             android:layout_height="@dimen/detail_header_image_height"
             android:layout_margin="16dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/default_artist_image"
+            app:srcCompat="@drawable/default_artist_image"
             android:transitionName="@string/transition_artist_image"
             tools:ignore="ContentDescription,UnusedAttribute" />
 

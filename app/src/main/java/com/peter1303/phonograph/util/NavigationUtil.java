@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.media.audiofx.AudioEffect;
+import android.os.Build;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityOptionsCompat;
@@ -67,7 +69,9 @@ public class NavigationUtil {
             AppUtil.sendMsg(activity, R.string.no_audio_ID);
         } else {
             SPUtil sp = new SPUtil(activity);
-            if (sp.getBoolean("equalizer_default", false)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !sp.getBoolean("equalizer_default", false)) {
+                activity.startActivity(new Intent(activity, EqualizerActivity.class));
+            } else {
                 try {
                     final Intent effects = new Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL);
                     effects.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId);
@@ -76,8 +80,6 @@ public class NavigationUtil {
                 } catch (@NonNull final ActivityNotFoundException notFound) {
                     AppUtil.sendMsg(activity, R.string.no_equalizer);
                 }
-            } else {
-                activity.startActivity(new Intent(activity, EqualizerActivity.class));
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.peter1303.phonograph.adapter.album;
 
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,8 +26,11 @@ import java.util.List;
  */
 public class HorizontalAlbumAdapter extends AlbumAdapter {
 
+    private Context context;
+
     public HorizontalAlbumAdapter(@NonNull AppCompatActivity activity, List<Album> dataSet, boolean usePalette, @Nullable CabHolder cabHolder) {
         super(activity, dataSet, HorizontalAdapterHelper.LAYOUT_RES, usePalette, cabHolder);
+        this.context = activity;
     }
 
     @Override
@@ -53,7 +57,6 @@ public class HorizontalAlbumAdapter extends AlbumAdapter {
     @Override
     protected void loadAlbumCover(Album album, final ViewHolder holder) {
         if (holder.image == null) return;
-
         SongGlideRequest.Builder.from(Glide.with(activity), album.safeGetFirstSong())
                 .checkIgnoreMediaStore(activity)
                 .generatePalette(activity).build()
@@ -66,10 +69,11 @@ public class HorizontalAlbumAdapter extends AlbumAdapter {
 
                     @Override
                     public void onColorReady(int color) {
-                        if (usePalette)
+                        if (usePalette) {
                             setColors(color, holder);
-                        else
+                        } else {
                             setColors(getAlbumArtistFooterColor(), holder);
+                        }
                     }
                 });
     }

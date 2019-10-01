@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.peter1303.phonograph.R;
 import com.peter1303.phonograph.interfaces.CabHolder;
-import com.peter1303.phonograph.model.OnlineInfo;
+import com.peter1303.phonograph.model.online.OnlineInfo;
 
 import java.util.List;
 

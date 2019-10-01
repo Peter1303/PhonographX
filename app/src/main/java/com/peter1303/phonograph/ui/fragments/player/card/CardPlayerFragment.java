@@ -10,15 +10,10 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.ColorInt;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.appcompat.widget.Toolbar;
+import android.os.Handler;
+import android.os.Message;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,6 +25,18 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
+import androidx.core.view.MenuItemCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.google.gson.Gson;
 import com.h6ah4i.android.widget.advrecyclerview.animator.GeneralItemAnimator;
 import com.h6ah4i.android.widget.advrecyclerview.animator.RefactoredDefaultItemAnimator;
 import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager;
@@ -47,17 +54,33 @@ import com.peter1303.phonograph.helper.MusicPlayerRemote;
 import com.peter1303.phonograph.helper.menu.SongMenuHelper;
 import com.peter1303.phonograph.model.Song;
 import com.peter1303.phonograph.model.lyrics.Lyrics;
+import com.peter1303.phonograph.model.online.lyric.OlLyric;
+import com.peter1303.phonograph.model.online.lyric.OlLyricInfo;
+import com.peter1303.phonograph.service.download.DownLoadImageService;
+import com.peter1303.phonograph.service.download.ImageDownLoadCallBack;
+import com.peter1303.phonograph.ui.activities.base.AbsBaseActivity;
 import com.peter1303.phonograph.ui.activities.base.AbsSlidingMusicPanelActivity;
 import com.peter1303.phonograph.ui.fragments.player.AbsPlayerFragment;
 import com.peter1303.phonograph.ui.fragments.player.PlayerAlbumCoverFragment;
+import com.peter1303.phonograph.util.ApiUtils;
+import com.peter1303.phonograph.util.AppUtil;
+import com.peter1303.phonograph.util.FileUtil;
 import com.peter1303.phonograph.util.ImageUtil;
 import com.peter1303.phonograph.util.MusicUtil;
+import com.peter1303.phonograph.util.PurchaseUtil;
+import com.peter1303.phonograph.util.SPUtil;
 import com.peter1303.phonograph.util.Util;
 import com.peter1303.phonograph.util.ViewUtil;
 import com.peter1303.phonograph.views.WidthFitSquareLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -99,6 +122,9 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
     private AsyncTask updateLyricsAsyncTask;
 
     private Lyrics lyrics;
+
+    private String title = "";
+    private String article = "";
 
     private Impl impl;
 
@@ -226,6 +252,8 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
 
     private void updateCurrentSong() {
         impl.updateCurrentSong(MusicPlayerRemote.getCurrentSong());
+        title = MusicPlayerRemote.getCurrentSong().title;
+        article = MusicPlayerRemote.getCurrentSong().artistName;
     }
 
     private void setUpSubFragments() {
@@ -318,13 +346,50 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
                 lyrics = null;
                 playerAlbumCoverFragment.setLyrics(null);
                 toolbar.getMenu().removeItem(R.id.action_show_lyrics);
+                if (new PurchaseUtil(getContext()).isProVersion()) {
+                    handler.sendEmptyMessage(2);
+                }
             }
 
             @Override
             protected Lyrics doInBackground(Void... params) {
                 String data = MusicUtil.getLyrics(song);
                 if (TextUtils.isEmpty(data)) {
-                    return null;
+                    if (!new PurchaseUtil(Objects.requireNonNull(getContext())).isProVersion()) {
+                        return null;
+                    }
+                    try {
+                        Map<String, String> list = new HashMap<>();
+                        list.put(ApiUtils.MODE, ApiUtils.LYRIC);
+                        String tmp_article = article;
+                        String[] replaced = {"/", "&", "\\"};
+                        for (String d : replaced) {
+                            if (tmp_article.contains(d)) {
+                                tmp_article.replace(d, " ");
+                            }
+                        }
+                        list.put(ApiUtils.INPUT, (title + " " + tmp_article).trim());
+                        String result = AbsBaseActivity.post(ApiUtils.SEARCH_API, list);
+                        Gson gson = new Gson();
+                        OlLyric olLyric = gson.fromJson(result, OlLyric.class);
+                        List<OlLyricInfo> olLyricInfo = olLyric.getData();
+                        if (olLyric.getCode() == 200 && olLyricInfo.size() != 0) {
+                            String temp = olLyricInfo.get(0).getLrc();
+                            Log.i("Phonograph", "olLyricInfo.getLrc() -> " + temp);
+                            if (TextUtils.isEmpty(temp)) {
+                                return null;
+                            } else {
+                                data = temp;
+                                // 保存歌词
+                                Message msg = new Message();
+                                msg.what = 1;
+                                msg.obj = olLyricInfo.get(0);
+                                handler.sendMessage(msg);
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e("Phonograph", e.toString());
+                    }
                 }
                 return Lyrics.parse(song, data);
             }
@@ -343,10 +408,9 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
                         if (toolbar.getMenu().findItem(R.id.action_show_lyrics) == null) {
                             int color = ToolbarContentTintHelper.toolbarContentColor(activity, Color.TRANSPARENT);
                             Drawable drawable = ImageUtil.getTintedVectorDrawable(activity, R.drawable.ic_comment_text_outline_white_24dp, color);
-                            toolbar.getMenu()
+                            MenuItemCompat.setShowAsAction(toolbar.getMenu()
                                     .add(Menu.NONE, R.id.action_show_lyrics, Menu.NONE, R.string.action_show_lyrics)
-                                    .setIcon(drawable)
-                                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+                                    .setIcon(drawable), MenuItem.SHOW_AS_ACTION_IF_ROOM);
                         }
                 }
             }
@@ -356,6 +420,107 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
                 onPostExecute(null);
             }
         }.execute();
+    }
+
+    @SuppressLint("HandlerLeak")
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            /*
+            List<Song> songs = AlbumLoader.getAlbum(Objects.requireNonNull(getContext()), getId()).songs;
+            List<String> paths = new ArrayList<>(songs.size());
+            for (Song song : songs) {
+                paths.add(song.data);
+            }
+            Map<FieldKey, String> fieldKeyValueMap = new EnumMap<>(FieldKey.class);
+            fieldKeyValueMap.put(FieldKey.ALBUM, "ALBUM");
+            fieldKeyValueMap.put(FieldKey.ARTIST, "ARTIST");
+            fieldKeyValueMap.put(FieldKey.ALBUM_ARTIST, "ALBUM_ARTIST");
+            fieldKeyValueMap.put(FieldKey.GENRE, "1");
+            fieldKeyValueMap.put(FieldKey.YEAR, "0");
+            AbsTagEditorActivity.context = getContext();
+            new AbsTagEditorActivity.WriteTagsAsyncTask().execute(
+                    new AbsTagEditorActivity.WriteTagsAsyncTask.LoadingInfo(paths, fieldKeyValueMap, null));
+             */
+            // TODO 自动保存到歌曲文件
+            if (msg.what == 1) {
+                OlLyricInfo olLyricInfo = (OlLyricInfo) msg.obj;
+                Song temp = MusicPlayerRemote.getCurrentSong();
+                String lyric = olLyricInfo.getLrc();
+                if (temp != null) {
+                    final File songFile = new File(temp.data);
+                    String abs_path = songFile.getAbsolutePath();
+                    Log.i("Phonograph", "getAbsolutePath -> " + abs_path);
+                    String path = new File(abs_path).getParent() + "/";
+                    Log.i("Phonograph", "getParent -> " + path);
+                    String full_name = new File(abs_path).getName();
+                    Log.i("Phonograph", "getName -> " + full_name);
+                    String name = full_name.substring(0, full_name.length() - 4);
+                    Log.i("Phonograph", "name -> " + name);
+                    boolean succeed = FileUtil.string2File(lyric, name, "lrc", path);
+                    Log.i("Phonograph", "save -> " + succeed);
+                    ImageView albumCover = PlayerAlbumCoverFragment.albumCover;
+                    if (albumCover != null && new PurchaseUtil(getContext()).isProVersion()) {
+                        if (!olLyricInfo.getPic().isEmpty()) {
+                            Glide.with(getContext())
+                                    .load(olLyricInfo.getPic())
+                                    .into(albumCover);
+                            onDownLoad(olLyricInfo.getPic(), name);
+                        }
+                    }
+                    Log.i("Phonograph", "albumCover != null -> " + (albumCover != null));
+                }
+            } else if (msg.what == 2 && new SPUtil(getContext()).getBoolean("online_album", false)) {
+                // 加载本地封面图片
+                // TODO 完善本地加载
+                ImageView albumCover = PlayerAlbumCoverFragment.albumCover;
+                if (albumCover != null && FileUtil.albumExists(getContext(), AppUtil.getName())) {
+                    Glide.with(getContext()).load(FileUtil.getAlbumCover(getContext(), AppUtil.getName())).into(albumCover);
+                }
+                AppUtil.changed(getContext());
+            }
+        }
+    };
+
+    /**
+     * 单线程列队执行
+     */
+    private static ExecutorService singleExecutor = null;
+
+    /**
+     * 执行单线程列队执行
+     */
+    private void runOnQueue(Runnable runnable) {
+        if (singleExecutor == null) {
+            singleExecutor = Executors.newSingleThreadExecutor();
+        }
+        singleExecutor.submit(runnable);
+    }
+
+    /**
+     * 启动图片下载线程
+     */
+    private void onDownLoad(String url, String name) {
+        DownLoadImageService service = new DownLoadImageService(getContext(), url,
+                new ImageDownLoadCallBack() {
+
+                    @Override
+                    public void onDownLoadSuccess(File file) {
+                        // 图片保存
+                        Log.i("Phonograph", "onDownLoad: onDownLoadSuccess -> " + file.toString());
+                        boolean succeed = FileUtil.album2File(getContext(), file, name);
+                        Log.i("Phonograph", "saveAlbumCover -> " + succeed);
+                    }
+
+                    @Override
+                    public void onDownLoadFailed() {
+                        // 图片保存失败
+                        AppUtil.sendMsg(getContext(), R.string.snackbar_save_album_failed);
+                    }
+                });
+        //启动图片下载线程
+        runOnQueue(service);
     }
 
     @Override
@@ -593,7 +758,6 @@ public class CardPlayerFragment extends AbsPlayerFragment implements PlayerAlbum
 
         @Override
         public void init() {
-
         }
 
         @Override
